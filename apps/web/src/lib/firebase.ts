@@ -1,6 +1,6 @@
 import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
-import { getAuth, type Auth } from "firebase/auth";
-import { getStorage, type FirebaseStorage } from "firebase/storage";
+import type { Auth } from "firebase/auth";
+import type { FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -29,12 +29,14 @@ export function getFirebaseApp() {
   return cachedApp;
 }
 
-export function getFirebaseAuth() {
+export async function getFirebaseAuth() {
+  const { getAuth } = await import("firebase/auth");
   cachedAuth = cachedAuth ?? getAuth(getFirebaseApp());
   return cachedAuth;
 }
 
-export function getFirebaseStorage() {
+export async function getFirebaseStorage() {
+  const { getStorage } = await import("firebase/storage");
   cachedStorage = cachedStorage ?? getStorage(getFirebaseApp());
   return cachedStorage;
 }

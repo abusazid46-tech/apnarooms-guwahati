@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { signOut } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
@@ -39,7 +38,15 @@ export default function TenantDashboardPage() {
             <h1>My Bookings</h1>
             <span>{profile?.name ?? user.email ?? user.phoneNumber}</span>
           </div>
-          <button type="button" onClick={() => signOut(getFirebaseAuth())}>Logout</button>
+          <button
+            type="button"
+            onClick={async () => {
+              const [{ signOut }, auth] = await Promise.all([import("firebase/auth"), getFirebaseAuth()]);
+              await signOut(auth);
+            }}
+          >
+            Logout
+          </button>
         </div>
         <div className="booking-list">
           {bookings.length ? bookings.map((booking) => (

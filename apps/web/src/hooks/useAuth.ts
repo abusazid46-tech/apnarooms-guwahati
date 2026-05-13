@@ -1,6 +1,6 @@
 "use client";
 
-import { onAuthStateChanged, type User } from "firebase/auth";
+import type { User } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { apiPost } from "@/lib/api";
@@ -13,26 +13,37 @@ export function useAuth() {
 
   useEffect(() => {
     let unsubscribe = () => {};
+    let active = true;
 
-    try {
-      unsubscribe = onAuthStateChanged(getFirebaseAuth(), (nextUser) => {
-      setUser(nextUser);
-      if (!nextUser) {
-        setProfile(null);
-        setLoading(false);
-        return;
+    async function subscribe() {
+      try {
+        const [{ onAuthStateChanged }, auth] = await Promise.all([import("firebase/auth"), getFirebaseAuth()]);
+        if (!active) return;
+
+        unsubscribe = onAuthStateChanged(auth, (nextUser) => {
+          setUser(nextUser);
+          if (!nextUser) {
+            setProfile(null);
+            setLoading(false);
+            return;
+          }
+
+          apiPost<{ user: BackendUser }>("/auth/sync-user", {}, { user: nextUser })
+            .then((result) => setProfile(result.user))
+            .catch(() => setProfile(null))
+            .finally(() => setLoading(false));
+        });
+      } catch {
+        if (active) setLoading(false);
       }
-
-      apiPost<{ user: BackendUser }>("/auth/sync-user", {}, { user: nextUser })
-        .then((result) => setProfile(result.user))
-        .catch(() => setProfile(null))
-        .finally(() => setLoading(false));
-      });
-    } catch {
-      setLoading(false);
     }
 
-    return () => unsubscribe();
+    subscribe();
+
+    return () => {
+      active = false;
+      unsubscribe();
+    };
   }, []);
 
   return { user, profile, loading, isAdmin: Boolean(profile && ["ADMIN", "SALES", "SUPPORT"].includes(profile.role)) };

@@ -1,7 +1,6 @@
 "use client";
 
 import { ReactNode } from "react";
-import { signOut } from "firebase/auth";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { useAdminGuard } from "@/hooks/useAdminGuard";
 
@@ -54,7 +53,15 @@ export function AdminShell({ children, active }: { children: ReactNode; active: 
               {label}
             </a>
           ))}
-          <button type="button" onClick={() => signOut(getFirebaseAuth())}>Logout</button>
+          <button
+            type="button"
+            onClick={async () => {
+              const [{ signOut }, auth] = await Promise.all([import("firebase/auth"), getFirebaseAuth()]);
+              await signOut(auth);
+            }}
+          >
+            Logout
+          </button>
         </nav>
       </aside>
       {children}
