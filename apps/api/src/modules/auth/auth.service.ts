@@ -9,6 +9,8 @@ type FirebaseUser = {
 };
 
 export async function syncUser(firebaseUser: FirebaseUser) {
+  const existingUserCount = await prisma.user.count();
+
   return prisma.user.upsert({
     where: { firebaseUid: firebaseUser.uid },
     update: {
@@ -22,7 +24,8 @@ export async function syncUser(firebaseUser: FirebaseUser) {
       email: firebaseUser.email ?? null,
       phone: firebaseUser.phone_number ?? null,
       name: firebaseUser.name ?? null,
-      avatarUrl: firebaseUser.picture ?? null
+      avatarUrl: firebaseUser.picture ?? null,
+      role: existingUserCount === 0 ? "ADMIN" : "USER"
     }
   });
 }
