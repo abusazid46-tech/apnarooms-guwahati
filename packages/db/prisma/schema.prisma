@@ -1,0 +1,204 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  SALES
+  SUPPORT
+  LANDLORD
+}
+
+enum PropertyCategory {
+  PG
+  HOMESTAY
+  FLAT
+  ROOM
+}
+
+enum PropertyStatus {
+  DRAFT
+  PUBLISHED
+  UNPUBLISHED
+  ARCHIVED
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  ORDER_CREATED
+  PAID
+  FAILED
+  REFUNDED
+}
+
+enum LeadStatus {
+  NEW
+  CONTACTED
+  VISIT_SCHEDULED
+  VISIT_COMPLETED
+  NEGOTIATION
+  TOKEN_PAID
+  MOVED_IN
+  LOST
+}
+
+enum CouponType {
+  PERCENT
+  FLAT
+}
+
+model User {
+  id          String      @id @default(cuid())
+  firebaseUid String     @unique
+  email       String?    @unique
+  phone       String?    @unique
+  name        String?
+  avatarUrl   String?
+  role        Role       @default(USER)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  properties  Property[] @relation("LandlordProperties")
+  bookings    Booking[]  @relation("TenantBookings")
+  assignedLeads Lead[]   @relation("AssignedLeads")
+  notes       AdminNote[] @relation("AdminNotes")
+}
+
+model Property {
+  id             String           @id @default(cuid())
+  title          String
+  slug           String?          @unique
+  description    String?
+  category       PropertyCategory
+  status         PropertyStatus   @default(DRAFT)
+  rentMonthly    Int
+  depositAmount  Int?
+  tokenAmount    Int
+  locality       String
+  city           String           @default("Guwahati")
+  address        String?
+  latitude       Decimal?
+  longitude      Decimal?
+  isVerified     Boolean          @default(false)
+  isAvailable    Boolean          @default(true)
+  amenities      String[]         @default([])
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  landlordId     String?
+  landlord       User?            @relation("LandlordProperties", fields: [landlordId], references: [id])
+  images         PropertyImage[]
+  bookings       Booking[]
+  leads          Lead[]
+  notes          AdminNote[]
+
+  @@index([status, category])
+  @@index([city, locality])
+}
+
+model PropertyImage {
+  id         String   @id @default(cuid())
+  propertyId String
+  url        String
+  path       String?
+  alt        String?
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model Booking {
+  id          String        @id @default(cuid())
+  tenantId    String
+  propertyId  String
+  tokenAmount Int
+  status      BookingStatus @default(PENDING_PAYMENT)
+  moveInDate  DateTime?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  tenant      User          @relation("TenantBookings", fields: [tenantId], references: [id])
+  property    Property      @relation(fields: [propertyId], references: [id])
+  payment     Payment?
+
+  @@index([tenantId])
+  @@index([propertyId])
+  @@index([status])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  bookingId         String        @unique
+  provider          String        @default("RAZORPAY")
+  providerOrderId   String        @unique
+  providerPaymentId String?
+  amount            Int
+  currency          String        @default("INR")
+  status            PaymentStatus @default(ORDER_CREATED)
+  rawPayload         Json?
+  createdAt          DateTime     @default(now())
+  updatedAt          DateTime     @updatedAt
+
+  booking           Booking       @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model Lead {
+  id           String     @id @default(cuid())
+  name         String?
+  phone        String?
+  email        String?
+  message      String?
+  source       String?
+  status       LeadStatus @default(NEW)
+  propertyId   String?
+  assignedToId String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  property     Property?  @relation(fields: [propertyId], references: [id])
+  assignedTo   User?      @relation("AssignedLeads", fields: [assignedToId], references: [id])
+
+  @@index([status])
+  @@index([propertyId])
+}
+
+model Coupon {
+  id           String     @id @default(cuid())
+  code         String     @unique
+  type         CouponType
+  value        Int
+  maxDiscount  Int?
+  isActive     Boolean    @default(true)
+  expiresAt    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+}
+
+model AdminNote {
+  id         String    @id @default(cuid())
+  propertyId String?
+  actorId    String
+  body       String
+  createdAt  DateTime  @default(now())
+
+  property   Property? @relation(fields: [propertyId], references: [id])
+  actor      User      @relation("AdminNotes", fields: [actorId], references: [id])
+
+  @@index([propertyId])
+  @@index([actorId])
+}

@@ -1,0 +1,19 @@
+{
+  "name": "apnarooms",
+  "private": true,
+  "packageManager": "pnpm@9.12.0",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "db:generate": "pnpm --filter @apnarooms/db prisma:generate",
+    "db:migrate": "pnpm --filter @apnarooms/db prisma:migrate",
+    "db:push": "pnpm --filter @apnarooms/db prisma:push",
+    "db:seed": "pnpm --filter @apnarooms/db prisma:seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.4.4",
+    "typescript": "^5.8.2"
+  }
+}
