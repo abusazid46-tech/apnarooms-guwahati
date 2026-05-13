@@ -1,116 +1,100 @@
-const stats = [
-  ["New Leads", "42", "+12%"],
-  ["Site Visits", "18", "Today"],
-  ["Token Paid", "13", "This week"],
-  ["Open Tickets", "7", "Support"]
-];
+"use client";
 
-const pipeline = [
-  ["New", 18],
-  ["Contacted", 14],
-  ["Visit Scheduled", 8],
-  ["Negotiation", 6],
-  ["Token Paid", 4],
-  ["Move-In", 3]
-];
-
-const leads = [
-  ["Ananya Sharma", "Girls PG Near SPM IAS Academy", "Visit Scheduled", "Sales A"],
-  ["Rahul Das", "2BHK Grandeur Flat", "Negotiation", "Sales B"],
-  ["Priya Bora", "Velvet Suites PG", "New", "Unassigned"],
-  ["Sameer Ali", "Jayanagar Student Room", "Token Paid", "Sales A"]
-];
+import { useEffect, useMemo, useState } from "react";
+import { AdminShell } from "@/components/admin/AdminShell";
+import { apiFetch } from "@/lib/api";
+import { useAuth } from "@/hooks/useAuth";
+import type { BackendBooking, BackendLead, BackendPayment, BackendProperty, BackendUser, Paginated } from "@/types/api";
 
 export default function AdminPage() {
-  return (
-    <main className="admin-shell">
-      <aside className="admin-sidebar">
-        <div className="admin-brand">
-          <span>AR</span>
-          <strong>ApnaRooms Admin</strong>
-        </div>
-        <nav>
-          <a className="active" href="/admin">Dashboard</a>
-          <a href="/admin/properties">Properties</a>
-          <a href="/admin/bookings">Bookings</a>
-          <a href="/admin/leads">CRM Leads</a>
-          <a href="/admin/users">Users</a>
-          <a href="/admin/payments">Payments</a>
-          <a href="/">Tenant Website</a>
-        </nav>
-      </aside>
+  const { user } = useAuth();
+  const [properties, setProperties] = useState<BackendProperty[]>([]);
+  const [bookings, setBookings] = useState<BackendBooking[]>([]);
+  const [leads, setLeads] = useState<BackendLead[]>([]);
+  const [payments, setPayments] = useState<BackendPayment[]>([]);
+  const [users, setUsers] = useState<BackendUser[]>([]);
 
+  useEffect(() => {
+    if (!user) return;
+    Promise.all([
+      apiFetch<Paginated<"properties", BackendProperty>>("/properties/admin?limit=100", { user }),
+      apiFetch<Paginated<"bookings", BackendBooking>>("/bookings/admin?limit=100", { user }),
+      apiFetch<Paginated<"leads", BackendLead>>("/leads/admin?limit=100", { user }),
+      apiFetch<Paginated<"payments", BackendPayment>>("/payments/admin?limit=100", { user }),
+      apiFetch<{ users: BackendUser[] }>("/users/admin", { user })
+    ]).then(([propertyResult, bookingResult, leadResult, paymentResult, userResult]) => {
+      setProperties(propertyResult.properties);
+      setBookings(bookingResult.bookings);
+      setLeads(leadResult.leads);
+      setPayments(paymentResult.payments);
+      setUsers(userResult.users);
+    }).catch(() => {});
+  }, [user]);
+
+  const paidAmount = useMemo(
+    () => payments.filter((payment) => payment.status === "PAID").reduce((sum, payment) => sum + payment.amount, 0),
+    [payments]
+  );
+  const leadCounts = useMemo(() => {
+    return leads.reduce<Record<string, number>>((acc, lead) => {
+      acc[lead.status] = (acc[lead.status] ?? 0) + 1;
+      return acc;
+    }, {});
+  }, [leads]);
+
+  return (
+    <AdminShell active="/admin">
       <section className="admin-main">
         <header className="admin-topbar">
           <div>
             <p>Operations CRM</p>
             <h1>Admin Dashboard</h1>
           </div>
-          <button type="button">Add Property</button>
+          <a className="admin-button" href="/admin/properties">Add Property</a>
         </header>
 
         <div className="admin-stat-grid">
-          {stats.map(([label, value, note]) => (
-            <article key={label}>
-              <span>{label}</span>
-              <strong>{value}</strong>
-              <small>{note}</small>
-            </article>
-          ))}
+          <article><span>Properties</span><strong>{properties.length}</strong><small>Inventory</small></article>
+          <article><span>Bookings</span><strong>{bookings.length}</strong><small>All time</small></article>
+          <article><span>Leads</span><strong>{leads.length}</strong><small>CRM desk</small></article>
+          <article><span>Revenue</span><strong>INR {paidAmount.toLocaleString("en-IN")}</strong><small>Paid tokens</small></article>
         </div>
 
         <div className="admin-two-col">
           <section className="admin-panel">
-            <div className="admin-panel-head">
-              <h2>CRM Pipeline</h2>
-              <span>Live funnel</span>
-            </div>
+            <div className="admin-panel-head"><h2>CRM Pipeline</h2><span>Live funnel</span></div>
             <div className="pipeline-list">
-              {pipeline.map(([stage, count]) => (
-                <div key={stage}>
-                  <span>{stage}</span>
-                  <strong>{count}</strong>
-                </div>
+              {["NEW", "CONTACTED", "VISIT_SCHEDULED", "NEGOTIATION", "TOKEN_PAID", "MOVED_IN"].map((stage) => (
+                <div key={stage}><span>{stage.replaceAll("_", " ")}</span><strong>{leadCounts[stage] ?? 0}</strong></div>
               ))}
             </div>
           </section>
 
           <section className="admin-panel">
-            <div className="admin-panel-head">
-              <h2>Payment Health</h2>
-              <span>Razorpay</span>
-            </div>
-            <div className="payment-meter">
-              <strong>INR 1.84L</strong>
-              <p>Verified token payments this month</p>
-              <div><span style={{ width: "72%" }} /></div>
+            <div className="admin-panel-head"><h2>Team</h2><span>Users</span></div>
+            <div className="pipeline-list">
+              {["ADMIN", "SALES", "SUPPORT", "LANDLORD", "USER"].map((role) => (
+                <div key={role}><span>{role}</span><strong>{users.filter((item) => item.role === role).length}</strong></div>
+              ))}
             </div>
           </section>
         </div>
 
         <section className="admin-panel">
-          <div className="admin-panel-head">
-            <h2>Lead Desk</h2>
-            <span>Assigned follow-ups</span>
-          </div>
+          <div className="admin-panel-head"><h2>Latest Leads</h2><a href="/admin/leads">Open CRM</a></div>
           <div className="lead-table">
-            <div className="lead-row head">
-              <span>Name</span>
-              <span>Property</span>
-              <span>Status</span>
-              <span>Owner</span>
-            </div>
-            {leads.map(([name, property, status, owner]) => (
-              <div className="lead-row" key={name}>
-                <span>{name}</span>
-                <span>{property}</span>
-                <span>{status}</span>
-                <span>{owner}</span>
+            <div className="lead-row head"><span>Name</span><span>Property</span><span>Status</span><span>Contact</span></div>
+            {leads.slice(0, 6).map((lead) => (
+              <div className="lead-row" key={lead.id}>
+                <span>{lead.name ?? "Unknown"}</span>
+                <span>{lead.property?.title ?? "General"}</span>
+                <span>{lead.status}</span>
+                <span>{lead.phone ?? lead.email ?? "-"}</span>
               </div>
             ))}
           </div>
         </section>
       </section>
-    </main>
+    </AdminShell>
   );
 }

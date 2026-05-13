@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { apiFetch, apiPost } from "@/lib/api";
+import { loadRazorpayCheckout } from "@/lib/razorpay";
+import { useAuth } from "@/hooks/useAuth";
+import type { BackendBooking, BackendProperty } from "@/types/api";
 
 type PropertyCategory = "PG" | "Homestay" | "Flat" | "Roommate";
 
 type Property = {
-  id: number;
+  id: string;
   name: string;
   location: string;
   locality: string;
@@ -23,9 +27,9 @@ type Coupon = {
   value: number;
 };
 
-const properties: Property[] = [
+const fallbackProperties: Property[] = [
   {
-    id: 1,
+    id: "demo-1",
     name: "Girls PG Near SPM IAS Academy",
     location: "Near SPM Lallans Coaching",
     locality: "Zoo Road",
@@ -36,7 +40,7 @@ const properties: Property[] = [
     images: ["https://picsum.photos/id/164/500/350", "https://picsum.photos/id/169/500/350", "https://picsum.photos/id/175/500/350"]
   },
   {
-    id: 2,
+    id: "demo-2",
     name: "Homestay In Zoo Road Guwahati",
     location: "Near Commerce College",
     locality: "Zoo Road",
@@ -47,7 +51,7 @@ const properties: Property[] = [
     images: ["https://picsum.photos/id/20/500/350", "https://picsum.photos/id/22/500/350", "https://picsum.photos/id/28/500/350"]
   },
   {
-    id: 3,
+    id: "demo-3",
     name: "Emerald Valley Flat",
     location: "Dispur",
     locality: "Dispur",
@@ -58,7 +62,7 @@ const properties: Property[] = [
     images: ["https://picsum.photos/id/106/500/350", "https://picsum.photos/id/108/500/350", "https://picsum.photos/id/112/500/350"]
   },
   {
-    id: 4,
+    id: "demo-4",
     name: "2 BHK + Store Room in Sachal",
     location: "VIP Road Six-Mile, Near Zudio",
     locality: "Six-Mile",
@@ -69,7 +73,7 @@ const properties: Property[] = [
     images: ["https://picsum.photos/id/152/500/350", "https://picsum.photos/id/155/500/350", "https://picsum.photos/id/159/500/350"]
   },
   {
-    id: 5,
+    id: "demo-5",
     name: "Velvet Suites PG for Women",
     location: "Beltola",
     locality: "Beltola",
@@ -80,7 +84,7 @@ const properties: Property[] = [
     images: ["https://picsum.photos/id/29/500/350", "https://picsum.photos/id/39/500/350", "https://picsum.photos/id/42/500/350"]
   },
   {
-    id: 6,
+    id: "demo-6",
     name: "Riverside Opus Homestay",
     location: "Fancy Bazar",
     locality: "Fancy Bazar",
@@ -91,7 +95,7 @@ const properties: Property[] = [
     images: ["https://picsum.photos/id/96/500/350", "https://picsum.photos/id/98/500/350", "https://picsum.photos/id/100/500/350"]
   },
   {
-    id: 7,
+    id: "demo-7",
     name: "2BHK Grandeur Flat",
     location: "GS Road",
     locality: "GS Road",
@@ -102,7 +106,7 @@ const properties: Property[] = [
     images: ["https://picsum.photos/id/177/500/350", "https://picsum.photos/id/179/500/350", "https://picsum.photos/id/190/500/350"]
   },
   {
-    id: 8,
+    id: "demo-8",
     name: "Room for Rent - Student Friendly",
     location: "Jayanagar",
     locality: "Jayanagar",
@@ -130,6 +134,12 @@ const categories: Array<{ value: "all" | PropertyCategory; label: string; icon: 
 
 const locations = ["GS Road", "Zoo Road", "Panbazar", "Dispur", "Beltola", "Fancy Bazar", "Six-Mile", "Jayanagar"];
 
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+  }
+}
+
 function formatMoney(value: number) {
   return `INR ${value.toLocaleString("en-IN")}`;
 }
@@ -144,15 +154,42 @@ function discountedToken(token: number, coupon: Coupon | null) {
   return token - Math.floor((token * coupon.value) / 100);
 }
 
+function mapBackendProperty(property: BackendProperty): Property {
+  const categoryMap: Record<BackendProperty["category"], PropertyCategory> = {
+    PG: "PG",
+    HOMESTAY: "Homestay",
+    FLAT: "Flat",
+    ROOM: "Roommate"
+  };
+
+  return {
+    id: property.id,
+    name: property.title,
+    location: property.address ?? property.locality,
+    locality: property.locality,
+    price: property.rentMonthly,
+    verified: property.isVerified,
+    category: categoryMap[property.category],
+    details: property.amenities.length ? property.amenities : [property.category, property.isAvailable ? "Available" : "Reserved"],
+    images: property.images.length
+      ? property.images.slice(0, 3).map((image) => image.url)
+      : fallbackProperties[0].images
+  };
+}
+
 export default function HomePage() {
+  const { user } = useAuth();
   const [category, setCategory] = useState<"all" | PropertyCategory>("all");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [radius, setRadius] = useState(2);
-  const [recentIds, setRecentIds] = useState<number[]>([]);
+  const [recentIds, setRecentIds] = useState<string[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
+  const [remoteProperties, setRemoteProperties] = useState<Property[]>([]);
+  const [apiNotice, setApiNotice] = useState("");
+  const [bookingBusy, setBookingBusy] = useState(false);
   const [couponInput, setCouponInput] = useState("");
   const [activeCoupon, setActiveCoupon] = useState<Coupon | null>(null);
   const [couponStatus, setCouponStatus] = useState("");
@@ -165,6 +202,19 @@ export default function HomePage() {
       localStorage.removeItem("apnarooms_recent");
     }
   }, []);
+
+  useEffect(() => {
+    apiFetch<{ properties: BackendProperty[] }>("/properties?limit=100")
+      .then((result) => {
+        setRemoteProperties(result.properties.map(mapBackendProperty));
+        setApiNotice(result.properties.length ? "Live listings loaded from backend." : "No backend listings yet. Showing demo inventory.");
+      })
+      .catch(() => {
+        setApiNotice("Backend listings unavailable. Showing demo inventory.");
+      });
+  }, []);
+
+  const properties = remoteProperties.length ? remoteProperties : fallbackProperties;
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -184,7 +234,7 @@ export default function HomePage() {
       const matchesMax = max === null || property.price <= max;
       return matchesCategory && matchesQuery && matchesLocation && matchesMin && matchesMax;
     });
-  }, [category, location, maxPrice, minPrice, query]);
+  }, [category, location, maxPrice, minPrice, properties, query]);
 
   const recentProperties = recentIds
     .map((id) => properties.find((property) => property.id === id))
@@ -222,6 +272,70 @@ export default function HomePage() {
   function shareProperty(property: Property) {
     const text = `ApnaRooms listing: ${property.name}\n${property.locality} | ${formatMoney(property.price)}/mo\nhttps://apnarooms.com/property/${property.id}`;
     window.location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  }
+
+  async function startCheckout() {
+    if (!selectedProperty) return;
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
+    if (selectedProperty.id.startsWith("demo-")) {
+      window.alert("Create this property in admin first, then booking will use the live backend.");
+      return;
+    }
+
+    setBookingBusy(true);
+    try {
+      const bookingResult = await apiPost<{ booking: BackendBooking }>(
+        "/bookings",
+        { propertyId: selectedProperty.id, couponCode: activeCoupon?.code },
+        { user }
+      );
+      const orderResult = await apiPost<{ order: Record<string, string | number> }>(
+        "/payments/create-order",
+        { bookingId: bookingResult.booking.id },
+        { user }
+      );
+
+      const loaded = await loadRazorpayCheckout();
+      if (!loaded || !window.Razorpay) throw new Error("Unable to load Razorpay Checkout");
+
+      const order = orderResult.order;
+      const razorpay = new window.Razorpay({
+        key: order.keyId,
+        amount: order.amount,
+        currency: order.currency,
+        name: "ApnaRooms",
+        description: selectedProperty.name,
+        order_id: order.id,
+        handler: async (response: Record<string, string>) => {
+          await apiPost(
+            "/payments/verify",
+            {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature
+            },
+            { user }
+          );
+          window.alert("Payment verified. Booking confirmed.");
+          setSelectedProperty(null);
+        },
+        prefill: {
+          name: user.displayName ?? "",
+          email: user.email ?? "",
+          contact: user.phoneNumber ?? ""
+        },
+        theme: { color: "#f97316" }
+      });
+
+      razorpay.open();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Checkout failed");
+    } finally {
+      setBookingBusy(false);
+    }
   }
 
   function detectLocation() {
@@ -330,6 +444,7 @@ export default function HomePage() {
           <div>
             <span>Live luxury inventory</span>
             <h2>Verified rooms ready for secure token booking</h2>
+            {apiNotice ? <p className="api-notice">{apiNotice}</p> : null}
           </div>
           <button
             type="button"
@@ -524,12 +639,10 @@ export default function HomePage() {
               <button
                 type="button"
                 className="pay-cta-lux"
-                onClick={() => {
-                  window.alert(`Razorpay checkout will open for ${formatMoney(total)} once keys are configured.`);
-                  setSelectedProperty(null);
-                }}
+                disabled={bookingBusy}
+                onClick={startCheckout}
               >
-                Continue to Razorpay Checkout
+                {bookingBusy ? "Preparing checkout..." : "Continue to Razorpay Checkout"}
               </button>
             </div>
           </div>

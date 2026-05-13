@@ -3,12 +3,12 @@
 import { useAuth } from "./useAuth";
 
 export function useAdminGuard() {
-  const { user, loading } = useAuth();
+  const { user, profile, loading, isAdmin } = useAuth();
 
   return {
     user,
+    profile,
     loading,
-    // Replace with backend role lookup from `/api/users/me`.
-    isAdmin: Boolean(user)
+    isAdmin
   };
 }
