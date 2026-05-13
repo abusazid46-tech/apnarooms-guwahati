@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { signOut } from "firebase/auth";
-import { firebaseAuth } from "@/lib/firebase";
+import { getFirebaseAuth } from "@/lib/firebase";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 import type { BackendBooking } from "@/types/api";
@@ -39,7 +39,7 @@ export default function TenantDashboardPage() {
             <h1>My Bookings</h1>
             <span>{profile?.name ?? user.email ?? user.phoneNumber}</span>
           </div>
-          <button type="button" onClick={() => signOut(firebaseAuth)}>Logout</button>
+          <button type="button" onClick={() => signOut(getFirebaseAuth())}>Logout</button>
         </div>
         <div className="booking-list">
           {bookings.length ? bookings.map((booking) => (

@@ -9,7 +9,7 @@ import {
   signInWithPopup,
   signOut
 } from "firebase/auth";
-import { firebaseAuth } from "@/lib/firebase";
+import { getFirebaseAuth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
@@ -28,7 +28,7 @@ export default function LoginPage() {
 
   async function loginWithGoogle() {
     setMessage("");
-    await signInWithPopup(firebaseAuth, new GoogleAuthProvider());
+    await signInWithPopup(getFirebaseAuth(), new GoogleAuthProvider());
     setMessage("Logged in successfully.");
   }
 
@@ -37,12 +37,12 @@ export default function LoginPage() {
     setMessage("");
 
     if (!recaptchaRef.current) {
-      recaptchaRef.current = new RecaptchaVerifier(firebaseAuth, "recaptcha-container", {
+      recaptchaRef.current = new RecaptchaVerifier(getFirebaseAuth(), "recaptcha-container", {
         size: "invisible"
       });
     }
 
-    const result = await signInWithPhoneNumber(firebaseAuth, phone, recaptchaRef.current);
+    const result = await signInWithPhoneNumber(getFirebaseAuth(), phone, recaptchaRef.current);
     setConfirmation(result);
     setMessage("OTP sent. Check your phone.");
   }
@@ -69,7 +69,7 @@ export default function LoginPage() {
             <span>Role: {profile?.role ?? "syncing"}</span>
             <div className="auth-actions">
               <a href={profile && ["ADMIN", "SALES", "SUPPORT"].includes(profile.role) ? "/admin" : "/dashboard"}>Continue</a>
-              <button type="button" onClick={() => signOut(firebaseAuth)}>Logout</button>
+              <button type="button" onClick={() => signOut(getFirebaseAuth())}>Logout</button>
             </div>
           </div>
         ) : (

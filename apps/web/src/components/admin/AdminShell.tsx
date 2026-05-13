@@ -2,7 +2,7 @@
 
 import { ReactNode } from "react";
 import { signOut } from "firebase/auth";
-import { firebaseAuth } from "@/lib/firebase";
+import { getFirebaseAuth } from "@/lib/firebase";
 import { useAdminGuard } from "@/hooks/useAdminGuard";
 
 const links = [
@@ -54,7 +54,7 @@ export function AdminShell({ children, active }: { children: ReactNode; active: 
               {label}
             </a>
           ))}
-          <button type="button" onClick={() => signOut(firebaseAuth)}>Logout</button>
+          <button type="button" onClick={() => signOut(getFirebaseAuth())}>Logout</button>
         </nav>
       </aside>
       {children}

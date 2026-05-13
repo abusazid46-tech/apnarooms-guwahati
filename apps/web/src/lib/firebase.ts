@@ -1,6 +1,6 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getStorage } from "firebase/storage";
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getStorage, type FirebaseStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,6 +10,31 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
-export const firebaseApp = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
-export const firebaseAuth = getAuth(firebaseApp);
-export const firebaseStorage = getStorage(firebaseApp);
+let cachedApp: FirebaseApp | null = null;
+let cachedAuth: Auth | null = null;
+let cachedStorage: FirebaseStorage | null = null;
+
+function assertBrowserFirebaseConfig() {
+  if (!firebaseConfig.apiKey) {
+    throw new Error("Missing NEXT_PUBLIC_FIREBASE_API_KEY");
+  }
+  if (!firebaseConfig.projectId) {
+    throw new Error("Missing NEXT_PUBLIC_FIREBASE_PROJECT_ID");
+  }
+}
+
+export function getFirebaseApp() {
+  assertBrowserFirebaseConfig();
+  cachedApp = cachedApp ?? (getApps().length ? getApps()[0] : initializeApp(firebaseConfig));
+  return cachedApp;
+}
+
+export function getFirebaseAuth() {
+  cachedAuth = cachedAuth ?? getAuth(getFirebaseApp());
+  return cachedAuth;
+}
+
+export function getFirebaseStorage() {
+  cachedStorage = cachedStorage ?? getStorage(getFirebaseApp());
+  return cachedStorage;
+}
