@@ -26,6 +26,12 @@ Production-ready starter structure for:
 5. Run `pnpm db:migrate`.
 6. Start both apps with `pnpm dev`.
 
+## Production Helpers
+
+- Promote a logged-in user to admin: `pnpm db:promote-admin -- --email=owner@example.com`
+- Seed starter launch properties: `pnpm db:seed-launch`
+- Production checklist: `docs/production-launch-checklist.md`
+
 ## MVP Build Order
 
 1. Firebase Google and phone OTP login

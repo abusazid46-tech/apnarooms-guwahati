@@ -10,7 +10,9 @@
     "db:generate": "pnpm --filter @apnarooms/db prisma:generate",
     "db:migrate": "pnpm --filter @apnarooms/db prisma:migrate",
     "db:push": "pnpm --filter @apnarooms/db prisma:push",
-    "db:seed": "pnpm --filter @apnarooms/db prisma:seed"
+    "db:seed": "pnpm --filter @apnarooms/db prisma:seed",
+    "db:promote-admin": "pnpm --filter @apnarooms/db prisma:promote-admin",
+    "db:seed-launch": "pnpm --filter @apnarooms/db prisma:seed-launch"
   },
   "devDependencies": {
     "turbo": "^2.4.4",

@@ -16,6 +16,8 @@
     "prisma:migrate": "prisma migrate dev",
     "prisma:push": "prisma db push",
     "prisma:seed": "tsx prisma/seed.ts",
+    "prisma:promote-admin": "tsx src/scripts/promote-admin.ts",
+    "prisma:seed-launch": "tsx src/scripts/seed-launch-properties.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

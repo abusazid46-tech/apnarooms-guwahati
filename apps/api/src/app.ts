@@ -13,11 +13,24 @@ import { usersRoutes } from "./modules/users/users.routes.js";
 import { env } from "./config/env.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 
+const allowedOrigins = env.CORS_ORIGIN.split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+function corsOrigin(origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) {
+  if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
+    callback(null, true);
+    return;
+  }
+
+  callback(new Error(`CORS origin is not allowed: ${origin}`));
+}
+
 export function createApp() {
   const app = express();
 
   app.use(helmet());
-  app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
+  app.use(cors({ origin: corsOrigin, credentials: true }));
 
   app.use("/api/payments/webhook", express.raw({ type: "application/json" }), webhookRoutes);
   app.use(express.json({ limit: "2mb" }));
