@@ -41,11 +41,12 @@ usersRoutes.get("/admin", authMiddleware, adminMiddleware, async (_req, res) => 
 
 usersRoutes.patch("/admin/:id/role", authMiddleware, adminMiddleware, async (req, res) => {
   const input = roleSchema.parse(req.body);
-  const existing = await prisma.user.findUnique({ where: { id: req.params.id } });
+  const userId = String(req.params.id);
+  const existing = await prisma.user.findUnique({ where: { id: userId } });
   if (!existing) throw new ApiError(404, "User not found");
 
   const user = await prisma.user.update({
-    where: { id: req.params.id },
+    where: { id: userId },
     data: { role: input.role }
   });
 
