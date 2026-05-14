@@ -13,9 +13,17 @@ import { usersRoutes } from "./modules/users/users.routes.js";
 import { env } from "./config/env.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 
-const allowedOrigins = env.CORS_ORIGIN.split(",")
-  .map((origin) => origin.trim())
-  .filter(Boolean);
+const defaultAllowedOrigins = [
+  "http://localhost:3000",
+  "https://apnarooms-guwahati-web.vercel.app"
+];
+
+const allowedOrigins = Array.from(
+  new Set([
+    ...defaultAllowedOrigins,
+    ...env.CORS_ORIGIN.split(",").map((origin) => origin.trim()).filter(Boolean)
+  ])
+);
 
 function corsOrigin(origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) {
   if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {

@@ -30,6 +30,18 @@ https://apnarooms-guwahati-web.vercel.app/login
 
 The first synced user becomes `ADMIN` automatically. If that did not happen, promote the account from a machine that has `DATABASE_URL` set to the production PostgreSQL external URL:
 
+The easiest production fix is to add this Render backend environment variable, then redeploy and log in again:
+
+```env
+ADMIN_EMAILS=owner@example.com
+```
+
+Use the same email you use for Google/email login. Multiple admins can be comma-separated:
+
+```env
+ADMIN_EMAILS=owner@example.com,manager@example.com
+```
+
 ```bash
 pnpm db:promote-admin -- --email=owner@example.com
 ```
