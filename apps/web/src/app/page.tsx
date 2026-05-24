@@ -14,114 +14,28 @@ type Property = {
   location: string;
   locality: string;
   price: number;
+  tokenAmount: number;
   verified: boolean;
+  available: boolean;
   category: PropertyCategory;
   details: string[];
   images: string[];
 };
 
-type Coupon = {
+type AppliedCoupon = {
   code: string;
   label: string;
   type: "percent" | "flat";
   value: number;
+  discountAmount: number;
+  finalAmount: number;
 };
 
-const fallbackProperties: Property[] = [
-  {
-    id: "demo-1",
-    name: "Girls PG Near SPM IAS Academy",
-    location: "Near SPM Lallans Coaching",
-    locality: "Zoo Road",
-    price: 7500,
-    verified: true,
-    category: "PG",
-    details: ["Girls PG", "Single/Double", "Meals Included", "WiFi Available"],
-    images: ["https://picsum.photos/id/164/500/350", "https://picsum.photos/id/169/500/350", "https://picsum.photos/id/175/500/350"]
-  },
-  {
-    id: "demo-2",
-    name: "Homestay In Zoo Road Guwahati",
-    location: "Near Commerce College",
-    locality: "Zoo Road",
-    price: 12000,
-    verified: true,
-    category: "Homestay",
-    details: ["Couple Friendly", "AC/Non-AC", "Meals Optional", "WiFi Available"],
-    images: ["https://picsum.photos/id/20/500/350", "https://picsum.photos/id/22/500/350", "https://picsum.photos/id/28/500/350"]
-  },
-  {
-    id: "demo-3",
-    name: "Emerald Valley Flat",
-    location: "Dispur",
-    locality: "Dispur",
-    price: 18500,
-    verified: true,
-    category: "Flat",
-    details: ["2 BHK", "3rd Floor", "Semi-Furnished", "Parking Available"],
-    images: ["https://picsum.photos/id/106/500/350", "https://picsum.photos/id/108/500/350", "https://picsum.photos/id/112/500/350"]
-  },
-  {
-    id: "demo-4",
-    name: "2 BHK + Store Room in Sachal",
-    location: "VIP Road Six-Mile, Near Zudio",
-    locality: "Six-Mile",
-    price: 8000,
-    verified: true,
-    category: "Roommate",
-    details: ["House", "2 BHK + Store", "Ground Floor", "No Brokerage"],
-    images: ["https://picsum.photos/id/152/500/350", "https://picsum.photos/id/155/500/350", "https://picsum.photos/id/159/500/350"]
-  },
-  {
-    id: "demo-5",
-    name: "Velvet Suites PG for Women",
-    location: "Beltola",
-    locality: "Beltola",
-    price: 9500,
-    verified: true,
-    category: "PG",
-    details: ["Girls PG", "Meals Included", "Power Backup", "WiFi Available"],
-    images: ["https://picsum.photos/id/29/500/350", "https://picsum.photos/id/39/500/350", "https://picsum.photos/id/42/500/350"]
-  },
-  {
-    id: "demo-6",
-    name: "Riverside Opus Homestay",
-    location: "Fancy Bazar",
-    locality: "Fancy Bazar",
-    price: 14500,
-    verified: false,
-    category: "Homestay",
-    details: ["Family Friendly", "Meals Included", "Private Entry", "Market Access"],
-    images: ["https://picsum.photos/id/96/500/350", "https://picsum.photos/id/98/500/350", "https://picsum.photos/id/100/500/350"]
-  },
-  {
-    id: "demo-7",
-    name: "2BHK Grandeur Flat",
-    location: "GS Road",
-    locality: "GS Road",
-    price: 22000,
-    verified: true,
-    category: "Flat",
-    details: ["2 BHK", "2nd Floor", "Fully Furnished", "Parking Available"],
-    images: ["https://picsum.photos/id/177/500/350", "https://picsum.photos/id/179/500/350", "https://picsum.photos/id/190/500/350"]
-  },
-  {
-    id: "demo-8",
-    name: "Room for Rent - Student Friendly",
-    location: "Jayanagar",
-    locality: "Jayanagar",
-    price: 5500,
-    verified: true,
-    category: "Roommate",
-    details: ["Single Room", "1st Floor", "WiFi Available", "Low Deposit"],
-    images: ["https://picsum.photos/id/202/500/350", "https://picsum.photos/id/205/500/350", "https://picsum.photos/id/210/500/350"]
-  }
-];
-
-const couponMap: Record<string, Coupon> = {
-  WELCOME10: { code: "WELCOME10", label: "10% off your first booking", type: "percent", value: 10 },
-  APNA500: { code: "APNA500", label: "Flat INR 500 off applied", type: "flat", value: 500 },
-  STUDENT20: { code: "STUDENT20", label: "20% student discount applied", type: "percent", value: 20 }
+type PublicCoupon = {
+  code: string;
+  type: "PERCENT" | "FLAT";
+  value: number;
+  maxDiscount?: number | null;
 };
 
 const categories: Array<{ value: "all" | PropertyCategory; label: string; icon: string }> = [
@@ -132,26 +46,30 @@ const categories: Array<{ value: "all" | PropertyCategory; label: string; icon: 
   { value: "Roommate", label: "Rooms for Rent", icon: "bi-door-open-fill" }
 ];
 
-const locations = ["GS Road", "Zoo Road", "Panbazar", "Dispur", "Beltola", "Fancy Bazar", "Six-Mile", "Jayanagar"];
-
 declare global {
   interface Window {
     Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
   }
 }
 
+const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "") ?? "";
+
 function formatMoney(value: number) {
   return `INR ${value.toLocaleString("en-IN")}`;
 }
 
 function tokenFor(property: Property) {
-  return Math.floor(property.price * 0.1);
+  return property.tokenAmount;
 }
 
-function discountedToken(token: number, coupon: Coupon | null) {
-  if (!coupon) return token;
-  if (coupon.type === "flat") return Math.max(0, token - coupon.value);
-  return token - Math.floor((token * coupon.value) / 100);
+function normaliseImages(images: string[]) {
+  const sourceImages = images.filter(Boolean).slice(0, 3);
+  if (!sourceImages.length) return [];
+  const normalised = [...sourceImages];
+  while (normalised.length < 3) {
+    normalised.push(sourceImages[normalised.length % sourceImages.length]);
+  }
+  return normalised;
 }
 
 function mapBackendProperty(property: BackendProperty): Property {
@@ -168,12 +86,12 @@ function mapBackendProperty(property: BackendProperty): Property {
     location: property.address ?? property.locality,
     locality: property.locality,
     price: property.rentMonthly,
+    tokenAmount: property.tokenAmount,
     verified: property.isVerified,
+    available: property.isAvailable,
     category: categoryMap[property.category],
     details: property.amenities.length ? property.amenities : [property.category, property.isAvailable ? "Available" : "Reserved"],
-    images: property.images.length
-      ? property.images.slice(0, 3).map((image) => image.url)
-      : fallbackProperties[0].images
+    images: normaliseImages(property.images.map((image) => image.url))
   };
 }
 
@@ -188,11 +106,14 @@ export default function HomePage() {
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [remoteProperties, setRemoteProperties] = useState<Property[]>([]);
+  const [loadingProperties, setLoadingProperties] = useState(true);
   const [apiNotice, setApiNotice] = useState("");
   const [bookingBusy, setBookingBusy] = useState(false);
   const [couponInput, setCouponInput] = useState("");
-  const [activeCoupon, setActiveCoupon] = useState<Coupon | null>(null);
+  const [activeCoupon, setActiveCoupon] = useState<AppliedCoupon | null>(null);
+  const [publicCoupons, setPublicCoupons] = useState<PublicCoupon[]>([]);
   const [couponStatus, setCouponStatus] = useState("");
+  const [checkoutMessage, setCheckoutMessage] = useState("");
 
   useEffect(() => {
     try {
@@ -204,17 +125,28 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
+    setLoadingProperties(true);
     apiFetch<{ properties: BackendProperty[] }>("/properties?limit=100")
       .then((result) => {
         setRemoteProperties(result.properties.map(mapBackendProperty));
-        setApiNotice(result.properties.length ? "Live listings loaded from backend." : "No backend listings yet. Showing demo inventory.");
+        setApiNotice(result.properties.length ? `${result.properties.length} live listing${result.properties.length > 1 ? "s" : ""} loaded from backend.` : "No published listings yet. Add a property from the admin panel to enable booking.");
       })
       .catch(() => {
-        setApiNotice("Backend listings unavailable. Showing demo inventory.");
-      });
+        setRemoteProperties([]);
+        setApiNotice("Unable to load live listings. Check backend URL, CORS, and Render deploy status.");
+      })
+      .finally(() => setLoadingProperties(false));
+
+    apiFetch<{ coupons: PublicCoupon[] }>("/coupons")
+      .then((result) => setPublicCoupons(result.coupons))
+      .catch(() => setPublicCoupons([]));
   }, []);
 
-  const properties = remoteProperties.length ? remoteProperties : fallbackProperties;
+  const properties = remoteProperties;
+  const locations = useMemo(
+    () => Array.from(new Set(properties.map((property) => property.locality))).sort(),
+    [properties]
+  );
 
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -241,11 +173,14 @@ export default function HomePage() {
     .filter((property): property is Property => Boolean(property));
 
   const token = selectedProperty ? tokenFor(selectedProperty) : 0;
-  const total = discountedToken(token, activeCoupon);
-  const savings = token - total;
+  const total = activeCoupon?.finalAmount ?? token;
+  const savings = activeCoupon?.discountAmount ?? 0;
 
   function openBooking(property: Property) {
     setSelectedProperty(property);
+    setActiveCoupon(null);
+    setCouponStatus("");
+    setCheckoutMessage("");
     setRecentIds((current) => {
       const next = [property.id, ...current.filter((id) => id !== property.id)].slice(0, 5);
       localStorage.setItem("apnarooms_recent", JSON.stringify(next));
@@ -253,25 +188,58 @@ export default function HomePage() {
     });
   }
 
-  function applyCoupon() {
+  async function applyCoupon() {
+    if (!selectedProperty) {
+      setCouponStatus("Select a property before applying a coupon.");
+      return;
+    }
+
     const code = couponInput.trim().toUpperCase();
     if (!code) {
       setCouponStatus("Please enter a code first.");
       return;
     }
-    const coupon = couponMap[code];
-    if (!coupon) {
+
+    try {
+      const result = await apiPost<{
+        coupon: { code: string; type: "PERCENT" | "FLAT"; value: number };
+        discountAmount: number;
+        finalAmount: number;
+      }>("/coupons/validate", { code, amount: token });
+
+      setActiveCoupon({
+        code: result.coupon.code,
+        label: `${formatMoney(result.discountAmount)} discount applied`,
+        type: result.coupon.type === "FLAT" ? "flat" : "percent",
+        value: result.coupon.value,
+        discountAmount: result.discountAmount,
+        finalAmount: result.finalAmount
+      });
+      setCouponStatus(`${result.coupon.code} applied. You saved ${formatMoney(result.discountAmount)}.`);
+    } catch (error) {
       setActiveCoupon(null);
-      setCouponStatus("Invalid code. Try WELCOME10, APNA500, or STUDENT20.");
-      return;
+      setCouponStatus(error instanceof Error ? error.message : "Invalid or expired coupon.");
     }
-    setActiveCoupon(coupon);
-    setCouponStatus(coupon.label);
   }
 
   function shareProperty(property: Property) {
-    const text = `ApnaRooms listing: ${property.name}\n${property.locality} | ${formatMoney(property.price)}/mo\nhttps://apnarooms.com/property/${property.id}`;
+    const origin = window.location.origin;
+    const text = `ApnaRooms listing: ${property.name}\n${property.locality} | ${formatMoney(property.price)}/mo\n${origin}/properties/${property.id}`;
     window.location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
+  }
+
+  function bookOnWhatsApp(property: Property) {
+    const origin = window.location.origin;
+    const text = [
+      "Hi ApnaRooms, I want to book this property.",
+      `Property: ${property.name}`,
+      `Locality: ${property.locality}`,
+      `Rent: ${formatMoney(property.price)}/mo`,
+      `Token: ${formatMoney(property.tokenAmount)}`,
+      `Link: ${origin}/properties/${property.id}`
+    ].join("\n");
+    const target = WHATSAPP_NUMBER ? `https://wa.me/${WHATSAPP_NUMBER}?text=` : "https://wa.me/?text=";
+    window.location.href = `${target}${encodeURIComponent(text)}`;
   }
 
   async function startCheckout() {
@@ -280,18 +248,20 @@ export default function HomePage() {
       window.location.href = "/login";
       return;
     }
-    if (selectedProperty.id.startsWith("demo-")) {
-      window.alert("Create this property in admin first, then booking will use the live backend.");
+    if (!selectedProperty.available) {
+      setCheckoutMessage("This property is currently reserved. Please choose another live listing.");
       return;
     }
 
     setBookingBusy(true);
+    setCheckoutMessage("Creating secure booking...");
     try {
       const bookingResult = await apiPost<{ booking: BackendBooking }>(
         "/bookings",
         { propertyId: selectedProperty.id, couponCode: activeCoupon?.code },
         { user }
       );
+      setCheckoutMessage("Opening Razorpay Checkout...");
       const orderResult = await apiPost<{ order: Record<string, string | number> }>(
         "/payments/create-order",
         { bookingId: bookingResult.booking.id },
@@ -319,8 +289,9 @@ export default function HomePage() {
             },
             { user }
           );
-          window.alert("Payment verified. Booking confirmed.");
+          setCheckoutMessage("Payment verified. Booking confirmed.");
           setSelectedProperty(null);
+          window.location.href = "/dashboard";
         },
         prefill: {
           name: user.displayName ?? "",
@@ -332,17 +303,25 @@ export default function HomePage() {
 
       razorpay.open();
     } catch (error) {
-      window.alert(error instanceof Error ? error.message : "Checkout failed");
+      setCheckoutMessage(error instanceof Error ? error.message : "Checkout failed");
     } finally {
       setBookingBusy(false);
     }
   }
 
   function detectLocation() {
-    setLocation("GS Road");
-    setQuery("");
-    setRadius(2);
-    window.alert("Demo location detected. Showing listings near GS Road.");
+    if (!navigator.geolocation) {
+      setApiNotice("Location permission is not supported in this browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      () => {
+        setRadius(2);
+        setApiNotice("Location permission granted. Select a live locality to narrow results.");
+      },
+      () => setApiNotice("Location permission was blocked. You can still filter by locality.")
+    );
   }
 
   return (
@@ -359,9 +338,6 @@ export default function HomePage() {
           <a href="#coupon">Offers</a>
           <a href="/login">Account</a>
         </div>
-        <a className="trust-gold" href="/admin">
-          Admin Login
-        </a>
       </nav>
 
       <section className="hero-luxury">
@@ -460,22 +436,38 @@ export default function HomePage() {
           </button>
         </div>
 
-        {filtered.length ? (
+        {loadingProperties ? (
+          <div className="no-results-lux">
+            <i className="bi bi-hourglass-split" />
+            <p>Loading live properties from backend...</p>
+          </div>
+        ) : filtered.length ? (
           <div className="property-grid-lux">
             {filtered.map((property) => (
               <article className="property-card-lux" key={property.id}>
                 <div className="img-zoom-wrapper">
-                  <div className="card-slider" aria-label={`${property.name} image gallery`}>
-                    {property.images.map((image, index) => (
-                      <img key={image} src={image} alt={`${property.name} view ${index + 1}`} />
-                    ))}
-                  </div>
-                  <div className="carousel-dots" aria-hidden="true">
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  {property.verified ? <span className="verified-lux-badge">Certified Gold</span> : <span className="review-badge">Reviewing</span>}
+                  {property.images.length ? (
+                    <>
+                      <div className="card-slider" aria-label={`${property.name} image gallery`}>
+                        {property.images.map((image, index) => (
+                          <img key={`${image}-${index}`} src={image} alt={`${property.name} view ${index + 1}`} />
+                        ))}
+                      </div>
+                      <div className="carousel-dots" aria-hidden="true">
+                        <span />
+                        <span />
+                        <span />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="listing-image-placeholder">
+                      <i className="bi bi-image" />
+                      <span>Photos pending</span>
+                    </div>
+                  )}
+                  {property.available ? (
+                    property.verified ? <span className="verified-lux-badge">Certified Gold</span> : <span className="review-badge">Reviewing</span>
+                  ) : <span className="review-badge">Reserved</span>}
                 </div>
                 <div className="property-body">
                   <h3>{property.name}</h3>
@@ -495,8 +487,12 @@ export default function HomePage() {
                       <button type="button" className="btn-share-card" onClick={() => shareProperty(property)}>
                         <i className="bi bi-share-fill" />
                       </button>
-                      <button type="button" className="btn-book-lux" onClick={() => openBooking(property)}>
-                        Secure Book
+                      <button type="button" className="btn-whatsapp-book" disabled={!property.available} onClick={() => bookOnWhatsApp(property)}>
+                        <i className="bi bi-whatsapp" />
+                        WhatsApp
+                      </button>
+                      <button type="button" className="btn-book-lux" disabled={!property.available} onClick={() => openBooking(property)}>
+                        {property.available ? "Secure Book" : "Reserved"}
                       </button>
                     </div>
                   </div>
@@ -506,8 +502,8 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="no-results-lux">
-            <i className="bi bi-emoji-frown" />
-            <p>No properties found. Try a different filter or location.</p>
+            <i className="bi bi-house-add" />
+            <p>{properties.length ? "No properties found. Try a different filter or location." : "No live properties yet. Add a published property from the admin panel to enable booking."}</p>
           </div>
         )}
       </section>
@@ -520,7 +516,7 @@ export default function HomePage() {
         <div className="recent-grid-lux">
           {recentProperties.length ? recentProperties.map((property) => (
             <button type="button" key={property.id} onClick={() => openBooking(property)}>
-              <img src={property.images[0]} alt="" />
+              {property.images[0] ? <img src={property.images[0]} alt="" /> : <span className="recent-placeholder">Photos pending</span>}
               <span>{property.name}</span>
               <small>{property.locality}</small>
             </button>
@@ -556,13 +552,16 @@ export default function HomePage() {
 
       <section className="tenant-container coupon-section" id="coupon">
         <div>
-          <h2>Have a Coupon or Referral Code?</h2>
-          <p>Apply your coupon to get exclusive discounts on token booking.</p>
-          <div className="coupon-input-wrap">
-            <input value={couponInput} onChange={(event) => setCouponInput(event.target.value)} placeholder="Enter coupon or referral code" />
-            <button type="button" onClick={applyCoupon}>Apply</button>
+          <h2>Active Booking Offers</h2>
+          <p>Choose a live property first, then apply one of these backend-validated coupons during checkout.</p>
+          <div className="coupon-pill-list">
+            {publicCoupons.length ? publicCoupons.map((coupon) => (
+              <button type="button" key={coupon.code} onClick={() => setCouponInput(coupon.code)}>
+                <strong>{coupon.code}</strong>
+                <span>{coupon.type === "FLAT" ? formatMoney(coupon.value) : `${coupon.value}%`} off</span>
+              </button>
+            )) : <span>No active coupons right now.</span>}
           </div>
-          <div className="coupon-result">{couponStatus}</div>
         </div>
         <div className="referral-box">
           <h3>Refer and Earn</h3>
@@ -580,9 +579,9 @@ export default function HomePage() {
         </div>
         <div className="blog-grid-lux">
           {[
-            ["Tenant Tips", "5 Things to Check Before Renting a PG in Guwahati", "https://picsum.photos/id/251/500/300"],
-            ["Market Trends", "Rental Prices in Guwahati: Area-by-Area Breakdown", "https://picsum.photos/id/188/500/300"],
-            ["Legal Guide", "Rental Agreement in Assam: What You Must Know", "https://picsum.photos/id/225/500/300"]
+            ["Tenant Tips", "5 Things to Check Before Renting a PG in Guwahati", "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=80"],
+            ["Market Trends", "Rental Prices in Guwahati: Area-by-Area Breakdown", "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80"],
+            ["Legal Guide", "Rental Agreement in Assam: What You Must Know", "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80"]
           ].map(([tag, title, image]) => (
             <article className="blog-card-lux" key={title}>
               <img src={image} alt={title} />
@@ -633,9 +632,11 @@ export default function HomePage() {
                 <div className="total-row"><span>Total Payable</span><strong>{formatMoney(total)}</strong></div>
               </div>
               <div className="coupon-input-wrap modal-coupon-row">
-                <input value={couponInput} onChange={(event) => setCouponInput(event.target.value)} placeholder="WELCOME10 / APNA500 / STUDENT20" />
+                <input value={couponInput} onChange={(event) => setCouponInput(event.target.value)} placeholder={publicCoupons[0]?.code ?? "Enter active coupon code"} />
                 <button type="button" onClick={applyCoupon}>Apply</button>
               </div>
+              {couponStatus ? <p className="coupon-result modal-status">{couponStatus}</p> : null}
+              {checkoutMessage ? <p className="checkout-status">{checkoutMessage}</p> : null}
               <button
                 type="button"
                 className="pay-cta-lux"

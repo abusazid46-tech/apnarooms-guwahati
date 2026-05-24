@@ -517,6 +517,24 @@ a {
   transition: transform 0.7s cubic-bezier(0.2, 0.9, 0.4, 1.2);
 }
 
+.listing-image-placeholder {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  background: linear-gradient(135deg, #eef4ff, #d8e8ff);
+  color: var(--blue-mid);
+  font-weight: 900;
+  text-align: center;
+}
+
+.listing-image-placeholder i {
+  font-size: 2rem;
+}
+
+.listing-image-placeholder span {
+  display: block;
+}
+
 .property-card-lux:hover .img-zoom-wrapper img {
   transform: scale(1.04);
 }
@@ -707,8 +725,40 @@ a {
   font-weight: 900;
 }
 
+.btn-whatsapp-book {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  border: 1.5px solid rgba(22, 163, 74, 0.28);
+  border-radius: 40px;
+  padding: 0 14px;
+  background: #16a34a;
+  color: #fff;
+  font-size: 0.86rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.btn-whatsapp-book:hover {
+  background: #128c3a;
+}
+
+.btn-whatsapp-book:disabled {
+  cursor: not-allowed;
+  border-color: #9aa8bd;
+  background: #9aa8bd;
+}
+
 .btn-book-lux:hover {
   background: linear-gradient(115deg, var(--orange), var(--orange-warm));
+}
+
+.btn-book-lux:disabled {
+  cursor: not-allowed;
+  background: #9aa8bd;
+  color: #f8fafc;
 }
 
 .no-results-lux {
@@ -770,6 +820,19 @@ a {
   height: 110px;
   border-radius: 0.7rem;
   object-fit: cover;
+}
+
+.recent-placeholder,
+.admin-thumb-placeholder {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 110px;
+  border-radius: 0.7rem;
+  background: #edf4ff;
+  color: var(--blue-mid);
+  font-weight: 900;
+  text-align: center;
 }
 
 .recent-grid-lux span {
@@ -917,6 +980,40 @@ a {
   min-height: 24px;
   margin-top: 10px;
   font-weight: 900;
+}
+
+.coupon-pill-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.coupon-pill-list button,
+.coupon-pill-list > span {
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: 12px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.coupon-pill-list button {
+  display: grid;
+  gap: 4px;
+  text-align: left;
+}
+
+.coupon-pill-list strong {
+  font-size: 0.92rem;
+}
+
+.coupon-pill-list button span {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: #dbe8ff;
+  font-size: 0.82rem;
 }
 
 .referral-box {
@@ -1095,6 +1192,17 @@ a {
 
 .modal-coupon-row input::placeholder {
   color: rgba(10, 36, 99, 0.4);
+}
+
+.modal-status,
+.checkout-status {
+  margin: 0 0 14px;
+  color: var(--blue-mid);
+  font-weight: 900;
+}
+
+.checkout-status {
+  color: var(--orange);
 }
 
 .pay-cta-lux {
@@ -1503,6 +1611,11 @@ a {
   height: 110px;
   border-radius: 8px;
   object-fit: cover;
+}
+
+.admin-card-list .admin-thumb-placeholder,
+.booking-list .admin-thumb-placeholder {
+  border-radius: 8px;
 }
 
 .admin-card-list h3,

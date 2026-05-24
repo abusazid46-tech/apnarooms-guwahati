@@ -51,7 +51,11 @@ export default function TenantDashboardPage() {
         <div className="booking-list">
           {bookings.length ? bookings.map((booking) => (
             <article key={booking.id}>
-              <img src={booking.property.images[0]?.url ?? "https://picsum.photos/id/164/500/350"} alt="" />
+              {booking.property.images[0]?.url ? (
+                <img src={booking.property.images[0].url} alt={booking.property.title} />
+              ) : (
+                <div className="admin-thumb-placeholder">Photos pending</div>
+              )}
               <div>
                 <h3>{booking.property.title}</h3>
                 <p>{booking.property.locality} | INR {booking.tokenAmount.toLocaleString("en-IN")}</p>

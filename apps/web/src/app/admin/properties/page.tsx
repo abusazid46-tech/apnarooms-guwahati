@@ -160,7 +160,11 @@ export default function AdminPropertiesPage() {
           <div className="admin-card-list">
             {properties.map((property) => (
               <article key={property.id}>
-                <img src={property.images[0]?.url ?? "https://picsum.photos/id/164/500/350"} alt="" />
+                {property.images[0]?.url ? (
+                  <img src={property.images[0].url} alt={property.title} />
+                ) : (
+                  <div className="admin-thumb-placeholder">Photos pending</div>
+                )}
                 <div>
                   <h3>{property.title}</h3>
                   <p>{property.locality} | INR {property.rentMonthly.toLocaleString("en-IN")} | {property.status}</p>

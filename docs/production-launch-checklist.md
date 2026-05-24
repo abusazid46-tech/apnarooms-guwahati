@@ -4,7 +4,7 @@ Use this after the backend is live on Render and the frontend is live on Vercel.
 
 ## 1. Render CORS
 
-Open Render dashboard, select the `apnarooms-api` web service, then go to **Environment**.
+Open Render dashboard, select the `apnarooms-guwahati` web service, then go to **Environment**.
 
 Set:
 
@@ -19,6 +19,16 @@ CORS_ORIGIN=http://localhost:3000,https://apnarooms-guwahati-web.vercel.app
 ```
 
 Save changes and redeploy the service.
+
+## 1.1 Vercel Backend URL
+
+Open Vercel, select the frontend project, then set:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=https://apnarooms-guwahati.onrender.com/api
+```
+
+Redeploy the frontend after changing this environment variable.
 
 ## 2. Admin User
 
@@ -74,11 +84,7 @@ Create each property with:
 - At least 3 uploaded photos or 3 image URLs
 - `Published`, `Verified`, and `Available` enabled
 
-For a starter launch inventory, run this only after replacing placeholder details/photos with real data or accepting the sample inventory:
-
-```bash
-pnpm db:seed-launch
-```
+For production testing, create at least one real published property here before testing booking and payment.
 
 ## 4. Razorpay Test Booking
 
@@ -106,7 +112,7 @@ Open Razorpay Dashboard in test mode, then go to **Account & Settings** -> **Web
 Add endpoint:
 
 ```text
-https://apnarooms-api.onrender.com/api/payments/webhook
+https://apnarooms-guwahati.onrender.com/api/payments/webhook
 ```
 
 Select these events:

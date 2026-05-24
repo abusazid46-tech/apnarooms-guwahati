@@ -43,6 +43,24 @@ export async function createBooking(firebaseUid: string, input: CreateBookingInp
     throw new ApiError(400, "Property is not available for booking");
   }
 
+  const existingBooking = await prisma.booking.findFirst({
+    where: {
+      tenantId: user.id,
+      propertyId: property.id,
+      status: { in: ["PENDING_PAYMENT", "CONFIRMED"] }
+    },
+    include: bookingInclude,
+    orderBy: { createdAt: "desc" }
+  });
+
+  if (existingBooking?.status === "CONFIRMED") {
+    throw new ApiError(409, "You already have a confirmed booking for this property");
+  }
+
+  if (existingBooking) {
+    return existingBooking;
+  }
+
   const couponResult = input.couponCode
     ? await applyCouponToAmount(input.couponCode, property.tokenAmount)
     : { finalAmount: property.tokenAmount };
@@ -110,12 +128,40 @@ export async function updateBookingStatus(id: string, input: UpdateBookingInput)
   const booking = await prisma.booking.findUnique({ where: { id } });
   if (!booking) throw new ApiError(404, "Booking not found");
 
-  return prisma.booking.update({
-    where: { id },
-    data: {
-      status: input.status,
-      moveInDate: input.moveInDate
-    },
-    include: bookingInclude
+  return prisma.$transaction(async (tx: any) => {
+    const updated = await tx.booking.update({
+      where: { id },
+      data: {
+        status: input.status,
+        moveInDate: input.moveInDate
+      },
+      include: bookingInclude
+    });
+
+    if (input.status === "CONFIRMED") {
+      await tx.property.update({
+        where: { id: booking.propertyId },
+        data: { isAvailable: false }
+      });
+    }
+
+    if (input.status === "CANCELLED" || input.status === "REFUNDED") {
+      const confirmedCount = await tx.booking.count({
+        where: {
+          propertyId: booking.propertyId,
+          status: "CONFIRMED",
+          id: { not: booking.id }
+        }
+      });
+
+      if (confirmedCount === 0) {
+        await tx.property.update({
+          where: { id: booking.propertyId },
+          data: { isAvailable: true }
+        });
+      }
+    }
+
+    return updated;
   });
 }

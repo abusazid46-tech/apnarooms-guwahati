@@ -114,6 +114,11 @@ export async function verifyRazorpayPayment(firebaseUid: string, input: VerifyIn
       data: { status: "CONFIRMED" }
     });
 
+    await tx.property.update({
+      where: { id: payment.booking.propertyId },
+      data: { isAvailable: false }
+    });
+
     return nextPayment;
   });
 
@@ -168,7 +173,10 @@ export async function processRazorpayWebhook(rawBody: Buffer, signatureHeader: s
   if (!orderId) return { processed: false, reason: "No order id in webhook" };
 
   if (event.event === "payment.captured" || event.event === "order.paid") {
-    const payment = await prisma.payment.findUnique({ where: { providerOrderId: orderId } });
+    const payment = await prisma.payment.findUnique({
+      where: { providerOrderId: orderId },
+      include: { booking: true }
+    });
     if (!payment) return { processed: false, reason: "Payment record not found" };
 
     await prisma.$transaction([
@@ -183,6 +191,10 @@ export async function processRazorpayWebhook(rawBody: Buffer, signatureHeader: s
       prisma.booking.update({
         where: { id: payment.bookingId },
         data: { status: "CONFIRMED" }
+      }),
+      prisma.property.update({
+        where: { id: payment.booking.propertyId },
+        data: { isAvailable: false }
       })
     ]);
 
