@@ -276,12 +276,11 @@ export default function HomePage() {
     window.location.href = `${target}${encodeURIComponent(text)}`;
   }
 
-  function submitListingRequest(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  function buildListingMessage() {
     const photoLine = listingPhotos.length
-      ? `Photos selected: ${listingPhotos.map((file) => file.name).join(", ")}`
+      ? `Photos selected: ${listingPhotos.map((file) => file.name).join(", ")}. If photos are not attached automatically, I will send them in this WhatsApp chat.`
       : "Photos selected: I will share photos in WhatsApp.";
-    const text = [
+    return [
       "Hi ApnaRooms, I want to list my property.",
       `Owner name: ${listingForm.ownerName}`,
       `Phone: ${listingForm.phone}`,
@@ -298,6 +297,24 @@ export default function HomePage() {
       `Description: ${listingForm.description || "Not specified"}`,
       photoLine
     ].join("\n");
+  }
+
+  async function submitListingRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const text = buildListingMessage();
+
+    if (listingPhotos.length && navigator.share && navigator.canShare?.({ files: listingPhotos })) {
+      try {
+        await navigator.share({
+          title: "ApnaRooms property listing",
+          text,
+          files: listingPhotos
+        });
+        return;
+      } catch {
+        // Fall back to WhatsApp text if the native share sheet is cancelled or unavailable.
+      }
+    }
 
     window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
   }
@@ -744,7 +761,7 @@ export default function HomePage() {
                 <span>Upload/select property photos</span>
                 <input type="file" accept="image/*" multiple onChange={(event) => setListingPhotos(Array.from(event.target.files ?? []))} />
               </label>
-              {listingPhotos.length ? <p className="admin-form-note">{listingPhotos.length} photo{listingPhotos.length > 1 ? "s" : ""} selected. WhatsApp will open with details; share the photos in that chat.</p> : <p className="admin-form-note">WhatsApp cannot auto-attach browser-selected files, but this form records photo names and opens the owner chat.</p>}
+              {listingPhotos.length ? <p className="admin-form-note">{listingPhotos.length} photo{listingPhotos.length > 1 ? "s" : ""} selected. On supported mobile browsers, the share sheet can include photos; otherwise WhatsApp will open with the details and the owner should attach photos in chat.</p> : <p className="admin-form-note">WhatsApp browser links support text only. Select photos to try mobile native sharing, or send photos manually after the chat opens.</p>}
               <button type="submit" className="pay-cta-lux">
                 <i className="bi bi-whatsapp" />
                 Send Listing Request on WhatsApp
