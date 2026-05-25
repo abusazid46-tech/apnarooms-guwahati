@@ -150,6 +150,7 @@ export default function AdminPropertiesPage() {
               <span>Upload property photos</span>
               <input type="file" accept="image/*" multiple onChange={updateImageFiles} />
             </label>
+            <p className="admin-form-note">If upload fails, Firebase Storage is not enabled or CORS is missing. Image URLs still work.</p>
             {imageFiles.length > 0 ? <p className="admin-form-note">{imageFiles.length} image file{imageFiles.length > 1 ? "s" : ""} selected.</p> : null}
             <button type="submit" disabled={saving}>{saving ? "Saving..." : "Create Property"}</button>
           </form>
@@ -169,6 +170,7 @@ export default function AdminPropertiesPage() {
                   <h3>{property.title}</h3>
                   <p>{property.locality} | INR {property.rentMonthly.toLocaleString("en-IN")} | {property.status}</p>
                   <div className="admin-actions">
+                    <a className="admin-inline-link" href={`/admin/properties/${property.id}/edit`}>Edit</a>
                     <button type="button" onClick={() => updateStatus(property, "PUBLISHED")}>Publish</button>
                     <button type="button" onClick={() => updateStatus(property, "UNPUBLISHED")}>Unpublish</button>
                     <button type="button" onClick={() => archiveProperty(property)}>Archive</button>

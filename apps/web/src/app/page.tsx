@@ -97,6 +97,7 @@ function mapBackendProperty(property: BackendProperty): Property {
 
 export default function HomePage() {
   const { user } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [category, setCategory] = useState<"all" | PropertyCategory>("all");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
@@ -331,12 +332,21 @@ export default function HomePage() {
           <i className="bi bi-house-heart-fill" />
           ApnaRooms.com
         </a>
-        <div className="nav-link-wrap">
-          <a href="#listings">Listings</a>
-          <a href="#about">About</a>
-          <a href="#blog">Blog</a>
-          <a href="#coupon">Offers</a>
-          <a href="/login">Account</a>
+        <button
+          type="button"
+          className="nav-menu-toggle"
+          aria-label="Open navigation menu"
+          aria-expanded={mobileMenuOpen}
+          onClick={() => setMobileMenuOpen((open) => !open)}
+        >
+          <i className={mobileMenuOpen ? "bi bi-x-lg" : "bi bi-list"} />
+        </button>
+        <div className={mobileMenuOpen ? "nav-link-wrap open" : "nav-link-wrap"}>
+          <a href="#listings" onClick={() => setMobileMenuOpen(false)}>Listings</a>
+          <a href="/about" onClick={() => setMobileMenuOpen(false)}>About</a>
+          <a href="#blog" onClick={() => setMobileMenuOpen(false)}>Blog</a>
+          <a href="#coupon" onClick={() => setMobileMenuOpen(false)}>Offers</a>
+          <a href="/login" onClick={() => setMobileMenuOpen(false)}>Account</a>
         </div>
       </nav>
 
@@ -604,7 +614,7 @@ export default function HomePage() {
           <div>
             <h4>Quick Links</h4>
             <a href="#listings">Property Listings</a>
-            <a href="#about">About Us</a>
+            <a href="/about">About Us</a>
             <a href="#blog">Blog</a>
             <a href="#coupon">Offers</a>
           </div>
