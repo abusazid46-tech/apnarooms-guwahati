@@ -143,6 +143,21 @@ export default function HomePage() {
       .catch(() => setPublicCoupons([]));
   }, []);
 
+  useEffect(() => {
+    if (loadingProperties || !remoteProperties.length) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const checkoutId = params.get("checkout") ?? localStorage.getItem("apnarooms_pending_checkout");
+    if (!checkoutId) return;
+
+    const property = remoteProperties.find((item) => item.id === checkoutId);
+    if (!property) return;
+
+    setSelectedProperty(property);
+    localStorage.removeItem("apnarooms_pending_checkout");
+    window.history.replaceState(null, "", window.location.pathname);
+  }, [loadingProperties, remoteProperties]);
+
   const properties = remoteProperties;
   const locations = useMemo(
     () => Array.from(new Set(properties.map((property) => property.locality))).sort(),
@@ -246,7 +261,9 @@ export default function HomePage() {
   async function startCheckout() {
     if (!selectedProperty) return;
     if (!user) {
-      window.location.href = "/login";
+      const nextPath = `/?checkout=${selectedProperty.id}`;
+      localStorage.setItem("apnarooms_pending_checkout", selectedProperty.id);
+      window.location.href = `/login?next=${encodeURIComponent(nextPath)}`;
       return;
     }
     if (!selectedProperty.available) {

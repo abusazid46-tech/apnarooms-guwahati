@@ -7,6 +7,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
   const { user, profile, loading } = useAuth();
+  const [nextPath, setNextPath] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [message, setMessage] = useState("");
@@ -14,10 +15,18 @@ export default function LoginPage() {
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
 
   useEffect(() => {
+    const next = new URLSearchParams(window.location.search).get("next");
+    if (next?.startsWith("/") && !next.startsWith("//")) setNextPath(next);
+
     return () => {
       recaptchaRef.current?.clear();
     };
   }, []);
+
+  useEffect(() => {
+    if (!user || loading || !nextPath) return;
+    window.location.href = nextPath;
+  }, [loading, nextPath, user]);
 
   async function loginWithGoogle() {
     setMessage("");
@@ -64,7 +73,7 @@ export default function LoginPage() {
             <strong>{profile?.name ?? user.phoneNumber ?? user.email ?? "Logged in user"}</strong>
             <span>Role: {profile?.role ?? "syncing"}</span>
             <div className="auth-actions">
-              <a href={profile && ["ADMIN", "SALES", "SUPPORT"].includes(profile.role) ? "/admin" : "/dashboard"}>Continue</a>
+              <a href={nextPath || (profile && ["ADMIN", "SALES", "SUPPORT"].includes(profile.role) ? "/admin" : "/dashboard")}>Continue</a>
               <button
                 type="button"
                 onClick={async () => {
