@@ -115,7 +115,6 @@ export default function HomePage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [listingFormOpen, setListingFormOpen] = useState(false);
   const [listingForm, setListingForm] = useState(initialListingForm);
-  const [listingPhotos, setListingPhotos] = useState<File[]>([]);
   const [category, setCategory] = useState<"all" | PropertyCategory>("all");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
@@ -277,9 +276,6 @@ export default function HomePage() {
   }
 
   function buildListingMessage() {
-    const photoLine = listingPhotos.length
-      ? `Photos selected: ${listingPhotos.map((file) => file.name).join(", ")}. If photos are not attached automatically, I will send them in this WhatsApp chat.`
-      : "Photos selected: I will share photos in WhatsApp.";
     return [
       "Hi ApnaRooms, I want to list my property.",
       `Owner name: ${listingForm.ownerName}`,
@@ -295,27 +291,13 @@ export default function HomePage() {
       `Rooms/beds: ${listingForm.rooms || "Not specified"}`,
       `Amenities: ${listingForm.amenities || "Not specified"}`,
       `Description: ${listingForm.description || "Not specified"}`,
-      photoLine
+      "Photos: I will upload/send property photos manually in this WhatsApp chat."
     ].join("\n");
   }
 
   async function submitListingRequest(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const text = buildListingMessage();
-
-    if (listingPhotos.length && navigator.share && navigator.canShare?.({ files: listingPhotos })) {
-      try {
-        await navigator.share({
-          title: "ApnaRooms property listing",
-          text,
-          files: listingPhotos
-        });
-        return;
-      } catch {
-        // Fall back to WhatsApp text if the native share sheet is cancelled or unavailable.
-      }
-    }
-
     window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
   }
 
@@ -757,11 +739,10 @@ export default function HomePage() {
                 <input value={listingForm.amenities} onChange={(event) => setListingForm({ ...listingForm, amenities: event.target.value })} placeholder="Amenities, comma separated" />
               </div>
               <textarea value={listingForm.description} onChange={(event) => setListingForm({ ...listingForm, description: event.target.value })} placeholder="Property description, rules, nearby landmarks" />
-              <label className="owner-photo-field">
-                <span>Upload/select property photos</span>
-                <input type="file" accept="image/*" multiple onChange={(event) => setListingPhotos(Array.from(event.target.files ?? []))} />
-              </label>
-              {listingPhotos.length ? <p className="admin-form-note">{listingPhotos.length} photo{listingPhotos.length > 1 ? "s" : ""} selected. On supported mobile browsers, the share sheet can include photos; otherwise WhatsApp will open with the details and the owner should attach photos in chat.</p> : <p className="admin-form-note">WhatsApp browser links support text only. Select photos to try mobile native sharing, or send photos manually after the chat opens.</p>}
+              <div className="owner-photo-note">
+                <strong>Property photos</strong>
+                <p>After WhatsApp opens, please upload room, front view, bathroom, kitchen, and nearby landmark photos manually in the chat.</p>
+              </div>
               <button type="submit" className="pay-cta-lux">
                 <i className="bi bi-whatsapp" />
                 Send Listing Request on WhatsApp

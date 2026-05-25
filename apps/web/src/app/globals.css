@@ -1320,7 +1320,7 @@ a {
   resize: vertical;
 }
 
-.owner-photo-field {
+.owner-photo-note {
   display: grid;
   gap: 8px;
   border: 1px dashed #b9c7df;
@@ -1328,7 +1328,16 @@ a {
   padding: 12px;
   background: #f8faff;
   color: #42516a;
-  font-weight: 900;
+}
+
+.owner-photo-note strong {
+  color: var(--blue-deep);
+}
+
+.owner-photo-note p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
 }
 
 .modal-body-lux h3 {
