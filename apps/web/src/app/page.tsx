@@ -1,5 +1,6 @@
 "use client";
 
+import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { apiFetch, apiPost } from "@/lib/api";
 import { loadRazorpayCheckout } from "@/lib/razorpay";
@@ -41,10 +42,24 @@ type PublicCoupon = {
 const categories: Array<{ value: "all" | PropertyCategory; label: string; icon: string }> = [
   { value: "all", label: "All Estates", icon: "bi-crown-fill" },
   { value: "PG", label: "PG Luxury", icon: "bi-building" },
-  { value: "Homestay", label: "Homestay", icon: "bi-flower1" },
-  { value: "Flat", label: "Flats", icon: "bi-door-closed-fill" },
-  { value: "Roommate", label: "Rooms for Rent", icon: "bi-door-open-fill" }
+  { value: "Homestay", label: "Homestay", icon: "bi-flower1" }
 ];
+
+const initialListingForm = {
+  ownerName: "",
+  phone: "",
+  propertyType: "PG",
+  propertyName: "",
+  locality: "",
+  city: "Guwahati",
+  address: "",
+  rent: "",
+  deposit: "",
+  availableFrom: "",
+  rooms: "",
+  amenities: "",
+  description: ""
+};
 
 declare global {
   interface Window {
@@ -52,7 +67,7 @@ declare global {
   }
 }
 
-const WHATSAPP_NUMBER = process.env.NEXT_PUBLIC_WHATSAPP_NUMBER?.replace(/\D/g, "") ?? "";
+const WHATSAPP_NUMBER = "918133983732";
 
 function formatMoney(value: number) {
   return `INR ${value.toLocaleString("en-IN")}`;
@@ -98,6 +113,9 @@ function mapBackendProperty(property: BackendProperty): Property {
 export default function HomePage() {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [listingFormOpen, setListingFormOpen] = useState(false);
+  const [listingForm, setListingForm] = useState(initialListingForm);
+  const [listingPhotos, setListingPhotos] = useState<File[]>([]);
   const [category, setCategory] = useState<"all" | PropertyCategory>("all");
   const [query, setQuery] = useState("");
   const [location, setLocation] = useState("");
@@ -258,6 +276,32 @@ export default function HomePage() {
     window.location.href = `${target}${encodeURIComponent(text)}`;
   }
 
+  function submitListingRequest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const photoLine = listingPhotos.length
+      ? `Photos selected: ${listingPhotos.map((file) => file.name).join(", ")}`
+      : "Photos selected: I will share photos in WhatsApp.";
+    const text = [
+      "Hi ApnaRooms, I want to list my property.",
+      `Owner name: ${listingForm.ownerName}`,
+      `Phone: ${listingForm.phone}`,
+      `Property type: ${listingForm.propertyType}`,
+      `Property name: ${listingForm.propertyName}`,
+      `Locality: ${listingForm.locality}`,
+      `City: ${listingForm.city}`,
+      `Address: ${listingForm.address}`,
+      `Monthly rent: ${listingForm.rent}`,
+      `Deposit: ${listingForm.deposit || "Not specified"}`,
+      `Available from: ${listingForm.availableFrom || "Not specified"}`,
+      `Rooms/beds: ${listingForm.rooms || "Not specified"}`,
+      `Amenities: ${listingForm.amenities || "Not specified"}`,
+      `Description: ${listingForm.description || "Not specified"}`,
+      photoLine
+    ].join("\n");
+
+    window.location.href = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+  }
+
   async function startCheckout() {
     if (!selectedProperty) return;
     if (!user) {
@@ -363,6 +407,16 @@ export default function HomePage() {
           <a href="/about" onClick={() => setMobileMenuOpen(false)}>About</a>
           <a href="#blog" onClick={() => setMobileMenuOpen(false)}>Blog</a>
           <a href="#coupon" onClick={() => setMobileMenuOpen(false)}>Offers</a>
+          <button
+            type="button"
+            className="nav-list-button"
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setListingFormOpen(true);
+            }}
+          >
+            List Property
+          </button>
           <a href="/login" onClick={() => setMobileMenuOpen(false)}>Account</a>
         </div>
       </nav>
@@ -577,6 +631,18 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="tenant-container list-property-section" id="list-property">
+        <div>
+          <span className="blog-tag">For Owners</span>
+          <h2>List your property with ApnaRooms</h2>
+          <p>Share your PG, hostel, room, flat, homestay, hotel, or guest house details. Our team will review and contact you on WhatsApp.</p>
+        </div>
+        <button type="button" className="pay-cta-lux" onClick={() => setListingFormOpen(true)}>
+          <i className="bi bi-house-add" />
+          List Your Property
+        </button>
+      </section>
+
       <section className="tenant-container coupon-section" id="coupon">
         <div>
           <h2>Active Booking Offers</h2>
@@ -642,6 +708,51 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      {listingFormOpen ? (
+        <div className="modal-layer" role="dialog" aria-modal="true">
+          <div className="listing-modal-lux">
+            <div className="modal-purple-header">
+              <h2>List Your Property</h2>
+              <button type="button" onClick={() => setListingFormOpen(false)}>Close</button>
+            </div>
+            <form className="listing-owner-form" onSubmit={submitListingRequest}>
+              <div className="form-grid-two">
+                <input value={listingForm.ownerName} onChange={(event) => setListingForm({ ...listingForm, ownerName: event.target.value })} placeholder="Owner name" required />
+                <input value={listingForm.phone} onChange={(event) => setListingForm({ ...listingForm, phone: event.target.value })} placeholder="Phone / WhatsApp number" required />
+                <select value={listingForm.propertyType} onChange={(event) => setListingForm({ ...listingForm, propertyType: event.target.value })}>
+                  <option value="PG">PG</option>
+                  <option value="Hostel">Hostel</option>
+                  <option value="Rental Room">Rental Room</option>
+                  <option value="Flat">Flat</option>
+                  <option value="Homestay">Homestay</option>
+                  <option value="Hotel">Hotel</option>
+                  <option value="Guest House">Guest House</option>
+                </select>
+                <input value={listingForm.propertyName} onChange={(event) => setListingForm({ ...listingForm, propertyName: event.target.value })} placeholder="Property name" required />
+                <input value={listingForm.locality} onChange={(event) => setListingForm({ ...listingForm, locality: event.target.value })} placeholder="Locality" required />
+                <input value={listingForm.city} onChange={(event) => setListingForm({ ...listingForm, city: event.target.value })} placeholder="City" required />
+                <input value={listingForm.address} onChange={(event) => setListingForm({ ...listingForm, address: event.target.value })} placeholder="Full address" required />
+                <input value={listingForm.rent} onChange={(event) => setListingForm({ ...listingForm, rent: event.target.value })} inputMode="numeric" placeholder="Monthly rent" required />
+                <input value={listingForm.deposit} onChange={(event) => setListingForm({ ...listingForm, deposit: event.target.value })} inputMode="numeric" placeholder="Deposit amount" />
+                <input value={listingForm.availableFrom} onChange={(event) => setListingForm({ ...listingForm, availableFrom: event.target.value })} placeholder="Available from" />
+                <input value={listingForm.rooms} onChange={(event) => setListingForm({ ...listingForm, rooms: event.target.value })} placeholder="Rooms / beds / occupancy" />
+                <input value={listingForm.amenities} onChange={(event) => setListingForm({ ...listingForm, amenities: event.target.value })} placeholder="Amenities, comma separated" />
+              </div>
+              <textarea value={listingForm.description} onChange={(event) => setListingForm({ ...listingForm, description: event.target.value })} placeholder="Property description, rules, nearby landmarks" />
+              <label className="owner-photo-field">
+                <span>Upload/select property photos</span>
+                <input type="file" accept="image/*" multiple onChange={(event) => setListingPhotos(Array.from(event.target.files ?? []))} />
+              </label>
+              {listingPhotos.length ? <p className="admin-form-note">{listingPhotos.length} photo{listingPhotos.length > 1 ? "s" : ""} selected. WhatsApp will open with details; share the photos in that chat.</p> : <p className="admin-form-note">WhatsApp cannot auto-attach browser-selected files, but this form records photo names and opens the owner chat.</p>}
+              <button type="submit" className="pay-cta-lux">
+                <i className="bi bi-whatsapp" />
+                Send Listing Request on WhatsApp
+              </button>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       {selectedProperty ? (
         <div className="modal-layer" role="dialog" aria-modal="true">
