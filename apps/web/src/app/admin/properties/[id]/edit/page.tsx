@@ -4,7 +4,7 @@ import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useAuth } from "@/hooks/useAuth";
-import { apiFetch, apiPatch, apiPost } from "@/lib/api";
+import { apiFetch, apiPatch } from "@/lib/api";
 import { uploadPropertyImage } from "@/lib/storage";
 import type { BackendProperty } from "@/types/api";
 
@@ -74,13 +74,26 @@ export default function EditPropertyPage() {
     setSaving(true);
     setMessage("Saving property...");
 
-    const images = form.imageUrls
+    const existingImages = form.imageUrls
       .split("\n")
       .map((url) => url.trim())
       .filter(Boolean)
-      .map((url, index) => ({ url, sortOrder: index, alt: form.title }));
+      .map((url) => ({ url, alt: form.title }));
 
     try {
+      const uploadedImages = [];
+
+      for (const [index, file] of imageFiles.entries()) {
+        setMessage(`Uploading image ${index + 1} of ${imageFiles.length}...`);
+        const url = await uploadPropertyImage(file, property.id);
+        uploadedImages.push({ url, alt: form.title });
+      }
+
+      const images = [...uploadedImages, ...existingImages].map((image, index) => ({
+        ...image,
+        sortOrder: index
+      }));
+
       const result = await apiPatch<{ property: BackendProperty }>(
         `/properties/${property.id}`,
         {
@@ -102,18 +115,8 @@ export default function EditPropertyPage() {
         { user }
       );
 
-      for (const [index, file] of imageFiles.entries()) {
-        setMessage(`Uploading image ${index + 1} of ${imageFiles.length}...`);
-        const url = await uploadPropertyImage(file, result.property.id);
-        await apiPost(`/properties/${result.property.id}/images`, {
-          url,
-          alt: result.property.title,
-          sortOrder: images.length + index
-        }, { user });
-      }
-
       setImageFiles([]);
-      setMessage("Property updated.");
+      setMessage(result.property.images.length ? "Property updated. New photos are now first in the gallery." : "Property updated.");
       await loadProperty();
     } catch (error) {
       setMessage(error instanceof Error ? error.message : "Property update failed.");
