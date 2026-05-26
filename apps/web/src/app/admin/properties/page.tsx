@@ -59,6 +59,19 @@ export default function AdminPropertiesPage() {
 
   function updateImageFiles(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
+    if (!files.length && imageFiles.length) {
+      addUploadDiagnostic({
+        status: "info",
+        message: "File picker closed without a new file. Keeping the previously selected photo."
+      });
+      console.info("[ApnaRooms upload] Empty create file change ignored; keeping previous selection", imageFiles.map((file) => ({
+        name: file.name,
+        size: file.size,
+        type: file.type
+      })));
+      return;
+    }
+
     setImageFiles(files);
     setUploadDiagnostics(
       files.length
@@ -66,7 +79,7 @@ export default function AdminPropertiesPage() {
             status: "info",
             message: `Selected ${file.name} (${Math.round(file.size / 1024)} KB)`
           }))
-        : []
+        : [{ status: "info", message: "No image selected." }]
     );
     console.info("[ApnaRooms upload] Selected create image files", files.map((file) => ({
       name: file.name,
