@@ -86,6 +86,17 @@ Create each property with:
 
 For production testing, create at least one real published property here before testing booking and payment.
 
+## 3.1 Cloudinary Image Uploads
+
+Create a Cloudinary unsigned upload preset, then set these in Vercel:
+
+```env
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your_cloud_name
+NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=your_unsigned_upload_preset
+```
+
+Redeploy Vercel after saving. Admin property photo upload will use Cloudinary first. Image URLs can still be pasted manually.
+
 ## 4. Razorpay Test Booking
 
 Open the frontend homepage, pick a published property, and click **Book**.
