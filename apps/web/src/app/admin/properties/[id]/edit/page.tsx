@@ -8,6 +8,12 @@ import { apiFetch, apiPatch } from "@/lib/api";
 import { uploadPropertyImage } from "@/lib/storage";
 import type { BackendProperty } from "@/types/api";
 
+type UploadDiagnostic = {
+  status: "info" | "success" | "error";
+  message: string;
+  url?: string;
+};
+
 const initialForm = {
   title: "",
   description: "",
@@ -51,11 +57,21 @@ export default function EditPropertyPage() {
   const [form, setForm] = useState(initialForm);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [message, setMessage] = useState("");
+  const [uploadDiagnostics, setUploadDiagnostics] = useState<UploadDiagnostic[]>([]);
   const [saving, setSaving] = useState(false);
+
+  function addUploadDiagnostic(diagnostic: UploadDiagnostic) {
+    setUploadDiagnostics((current) => [...current, diagnostic]);
+  }
 
   async function loadProperty() {
     if (!user || !params.id) return;
     const result = await apiFetch<{ property: BackendProperty }>(`/properties/admin/${params.id}`, { user });
+    console.info("[ApnaRooms upload] Loaded admin property", {
+      propertyId: result.property.id,
+      imageCount: result.property.images.length,
+      firstImage: result.property.images[0]?.url
+    });
     setProperty(result.property);
     setForm(propertyToForm(result.property));
   }
@@ -65,7 +81,21 @@ export default function EditPropertyPage() {
   }, [user, params.id]);
 
   function updateImageFiles(event: ChangeEvent<HTMLInputElement>) {
-    setImageFiles(Array.from(event.target.files ?? []));
+    const files = Array.from(event.target.files ?? []);
+    setImageFiles(files);
+    setUploadDiagnostics(
+      files.length
+        ? files.map((file) => ({
+            status: "info",
+            message: `Selected ${file.name} (${Math.round(file.size / 1024)} KB)`
+          }))
+        : []
+    );
+    console.info("[ApnaRooms upload] Selected edit image files", files.map((file) => ({
+      name: file.name,
+      size: file.size,
+      type: file.type
+    })));
   }
 
   async function saveProperty(event: FormEvent) {
@@ -73,6 +103,12 @@ export default function EditPropertyPage() {
     if (!user || !property) return;
     setSaving(true);
     setMessage("Saving property...");
+    setUploadDiagnostics([]);
+    console.info("[ApnaRooms upload] Edit save started", {
+      propertyId: property.id,
+      selectedFileCount: imageFiles.length,
+      existingImageCount: property.images.length
+    });
 
     const existingImages = form.imageUrls
       .split("\n")
@@ -85,7 +121,9 @@ export default function EditPropertyPage() {
 
       for (const [index, file] of imageFiles.entries()) {
         setMessage(`Uploading image ${index + 1} of ${imageFiles.length}...`);
+        addUploadDiagnostic({ status: "info", message: `Uploading ${file.name} to Cloudinary...` });
         const url = await uploadPropertyImage(file, property.id);
+        addUploadDiagnostic({ status: "success", message: `Cloudinary upload success: ${file.name}`, url });
         uploadedImages.push({ url, alt: form.title });
       }
 
@@ -93,6 +131,13 @@ export default function EditPropertyPage() {
         ...image,
         sortOrder: index
       }));
+
+      addUploadDiagnostic({ status: "info", message: `Saving ${images.length} image URL${images.length === 1 ? "" : "s"} to backend...` });
+      console.info("[ApnaRooms upload] Saving edited property images to backend", {
+        propertyId: property.id,
+        imageCount: images.length,
+        firstImage: images[0]?.url
+      });
 
       const result = await apiPatch<{ property: BackendProperty }>(
         `/properties/${property.id}`,
@@ -115,10 +160,25 @@ export default function EditPropertyPage() {
         { user }
       );
 
+      console.info("[ApnaRooms upload] Backend saved edited property", {
+        propertyId: result.property.id,
+        imageCount: result.property.images.length,
+        firstImage: result.property.images[0]?.url
+      });
+      addUploadDiagnostic({
+        status: "success",
+        message: `Backend saved ${result.property.images.length} image URL${result.property.images.length === 1 ? "" : "s"}. First frontend image is below.`,
+        url: result.property.images[0]?.url
+      });
       setImageFiles([]);
       setMessage(result.property.images.length ? "Property updated. New photos are now first in the gallery." : "Property updated.");
       await loadProperty();
     } catch (error) {
+      console.error("[ApnaRooms upload] Edit image save failed", error);
+      addUploadDiagnostic({
+        status: "error",
+        message: error instanceof Error ? error.message : "Property update failed."
+      });
       setMessage(error instanceof Error ? error.message : "Property update failed.");
     } finally {
       setSaving(false);
@@ -166,6 +226,17 @@ export default function EditPropertyPage() {
             </label>
             <p className="admin-form-note">Photos upload to Cloudinary and are saved to the live property. Image URLs still work.</p>
             {imageFiles.length > 0 ? <p className="admin-form-note">{imageFiles.length} image file{imageFiles.length > 1 ? "s" : ""} selected.</p> : null}
+            {uploadDiagnostics.length > 0 ? (
+              <div className="admin-upload-diagnostics">
+                <strong>Upload diagnostics</strong>
+                {uploadDiagnostics.map((item, index) => (
+                  <div className={`admin-upload-log ${item.status}`} key={`${item.message}-${index}`}>
+                    <span>{item.message}</span>
+                    {item.url ? <a href={item.url} target="_blank" rel="noreferrer">{item.url}</a> : null}
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <button type="submit" disabled={saving || !property}>{saving ? "Saving..." : "Save Property"}</button>
           </form>
         </section>

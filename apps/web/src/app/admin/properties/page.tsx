@@ -7,6 +7,12 @@ import { uploadPropertyImage } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import type { BackendProperty, Paginated } from "@/types/api";
 
+type UploadDiagnostic = {
+  status: "info" | "success" | "error";
+  message: string;
+  url?: string;
+};
+
 const initialForm = {
   title: "",
   description: "",
@@ -30,11 +36,20 @@ export default function AdminPropertiesPage() {
   const [form, setForm] = useState(initialForm);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [message, setMessage] = useState("");
+  const [uploadDiagnostics, setUploadDiagnostics] = useState<UploadDiagnostic[]>([]);
   const [saving, setSaving] = useState(false);
+
+  function addUploadDiagnostic(diagnostic: UploadDiagnostic) {
+    setUploadDiagnostics((current) => [...current, diagnostic]);
+  }
 
   async function loadProperties() {
     if (!user) return;
     const result = await apiFetch<Paginated<"properties", BackendProperty>>("/properties/admin?limit=100", { user });
+    console.info("[ApnaRooms upload] Loaded admin properties", {
+      propertyCount: result.properties.length,
+      firstPropertyImage: result.properties[0]?.images[0]?.url
+    });
     setProperties(result.properties);
   }
 
@@ -43,7 +58,21 @@ export default function AdminPropertiesPage() {
   }, [user]);
 
   function updateImageFiles(event: ChangeEvent<HTMLInputElement>) {
-    setImageFiles(Array.from(event.target.files ?? []));
+    const files = Array.from(event.target.files ?? []);
+    setImageFiles(files);
+    setUploadDiagnostics(
+      files.length
+        ? files.map((file) => ({
+            status: "info",
+            message: `Selected ${file.name} (${Math.round(file.size / 1024)} KB)`
+          }))
+        : []
+    );
+    console.info("[ApnaRooms upload] Selected create image files", files.map((file) => ({
+      name: file.name,
+      size: file.size,
+      type: file.type
+    })));
   }
 
   async function createProperty(event: FormEvent) {
@@ -51,6 +80,10 @@ export default function AdminPropertiesPage() {
     if (!user) return;
     setSaving(true);
     setMessage("Creating property...");
+    setUploadDiagnostics([]);
+    console.info("[ApnaRooms upload] Create property started", {
+      selectedFileCount: imageFiles.length
+    });
 
     const images = form.imageUrls
       .split("\n")
@@ -59,6 +92,7 @@ export default function AdminPropertiesPage() {
       .map((url, index) => ({ url, sortOrder: index }));
 
     try {
+      addUploadDiagnostic({ status: "info", message: "Creating backend property record..." });
       const result = await apiPost<{ property: BackendProperty }>(
         "/properties",
         {
@@ -80,14 +114,27 @@ export default function AdminPropertiesPage() {
         { user }
       );
 
+      console.info("[ApnaRooms upload] Backend property created", {
+        propertyId: result.property.id,
+        imageCount: result.property.images.length
+      });
+      addUploadDiagnostic({ status: "success", message: `Backend property created: ${result.property.id}` });
+
       for (const [index, file] of imageFiles.entries()) {
         setMessage(`Uploading image ${index + 1} of ${imageFiles.length}...`);
+        addUploadDiagnostic({ status: "info", message: `Uploading ${file.name} to Cloudinary...` });
         const url = await uploadPropertyImage(file, result.property.id);
-        await apiPost(`/properties/${result.property.id}/images`, {
+        addUploadDiagnostic({ status: "success", message: `Cloudinary upload success: ${file.name}`, url });
+        const imageResult = await apiPost<{ image: { url: string } }>(`/properties/${result.property.id}/images`, {
           url,
           alt: result.property.title,
           sortOrder: images.length + index
         }, { user });
+        console.info("[ApnaRooms upload] Backend image saved", {
+          propertyId: result.property.id,
+          imageUrl: imageResult.image.url
+        });
+        addUploadDiagnostic({ status: "success", message: "Backend image URL saved.", url: imageResult.image.url });
       }
 
       setForm(initialForm);
@@ -95,6 +142,11 @@ export default function AdminPropertiesPage() {
       setMessage("Property created and published.");
       await loadProperties();
     } catch (error) {
+      console.error("[ApnaRooms upload] Create property image save failed", error);
+      addUploadDiagnostic({
+        status: "error",
+        message: error instanceof Error ? error.message : "Property creation failed."
+      });
       setMessage(error instanceof Error ? error.message : "Property creation failed.");
     } finally {
       setSaving(false);
@@ -152,6 +204,17 @@ export default function AdminPropertiesPage() {
             </label>
             <p className="admin-form-note">Photos upload to Cloudinary and are saved to the live property. Image URLs still work.</p>
             {imageFiles.length > 0 ? <p className="admin-form-note">{imageFiles.length} image file{imageFiles.length > 1 ? "s" : ""} selected.</p> : null}
+            {uploadDiagnostics.length > 0 ? (
+              <div className="admin-upload-diagnostics">
+                <strong>Upload diagnostics</strong>
+                {uploadDiagnostics.map((item, index) => (
+                  <div className={`admin-upload-log ${item.status}`} key={`${item.message}-${index}`}>
+                    <span>{item.message}</span>
+                    {item.url ? <a href={item.url} target="_blank" rel="noreferrer">{item.url}</a> : null}
+                  </div>
+                ))}
+              </div>
+            ) : null}
             <button type="submit" disabled={saving}>{saving ? "Saving..." : "Create Property"}</button>
           </form>
         </section>

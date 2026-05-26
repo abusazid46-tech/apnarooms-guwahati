@@ -1792,6 +1792,45 @@ a {
   font-weight: 800;
 }
 
+.admin-upload-diagnostics {
+  display: grid;
+  gap: 8px;
+  border: 1px solid #dfe6f2;
+  border-radius: 8px;
+  padding: 12px;
+  background: #f8faff;
+  color: #172033;
+}
+
+.admin-upload-diagnostics strong {
+  font-size: 0.9rem;
+}
+
+.admin-upload-log {
+  display: grid;
+  gap: 4px;
+  border-left: 3px solid #8aa0bd;
+  padding: 8px 10px;
+  background: #fff;
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.admin-upload-log.success {
+  border-left-color: #16a34a;
+}
+
+.admin-upload-log.error {
+  border-left-color: #dc2626;
+  background: #fff5f5;
+}
+
+.admin-upload-log a {
+  overflow-wrap: anywhere;
+  color: var(--blue-mid);
+  font-weight: 800;
+}
+
 .admin-form button,
 .admin-actions button,
 .lead-row button {
