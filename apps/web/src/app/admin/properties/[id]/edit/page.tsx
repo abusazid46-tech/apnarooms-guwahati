@@ -161,7 +161,7 @@ export default function EditPropertyPage() {
               <span>Upload more property photos</span>
               <input type="file" accept="image/*" multiple onChange={updateImageFiles} />
             </label>
-            <p className="admin-form-note">If upload fails, Firebase Storage is not enabled or CORS is missing. Image URLs still work.</p>
+            <p className="admin-form-note">Photos upload to Cloudinary and are saved to the live property. Image URLs still work.</p>
             {imageFiles.length > 0 ? <p className="admin-form-note">{imageFiles.length} image file{imageFiles.length > 1 ? "s" : ""} selected.</p> : null}
             <button type="submit" disabled={saving || !property}>{saving ? "Saving..." : "Save Property"}</button>
           </form>
