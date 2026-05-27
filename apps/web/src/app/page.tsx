@@ -37,6 +37,7 @@ type PublicCoupon = {
   type: "PERCENT" | "FLAT";
   value: number;
   maxDiscount?: number | null;
+  expiresAt?: string | null;
 };
 
 const categories: Array<{ value: "all" | PropertyCategory; label: string; icon: string }> = [
@@ -71,6 +72,19 @@ const WHATSAPP_NUMBER = "918133983732";
 
 function formatMoney(value: number) {
   return `INR ${value.toLocaleString("en-IN")}`;
+}
+
+function formatCouponOffer(coupon: PublicCoupon) {
+  if (coupon.type === "FLAT") return `${formatMoney(coupon.value)} off`;
+  return `${coupon.value}% off${coupon.maxDiscount ? ` up to ${formatMoney(coupon.maxDiscount)}` : ""}`;
+}
+
+function formatCouponExpiry(value?: string | null) {
+  if (!value) return "No expiry";
+  return `Valid till ${new Date(value).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short"
+  })}`;
 }
 
 function tokenFor(property: Property) {
@@ -221,17 +235,19 @@ export default function HomePage() {
     });
   }
 
-  async function applyCoupon() {
+  async function applyCoupon(codeOverride?: string) {
     if (!selectedProperty) {
       setCouponStatus("Select a property before applying a coupon.");
       return;
     }
 
-    const code = couponInput.trim().toUpperCase();
+    const code = (codeOverride ?? couponInput).trim().toUpperCase();
     if (!code) {
       setCouponStatus("Please enter a code first.");
       return;
     }
+    setCouponInput(code);
+    setCouponStatus("Checking offer...");
 
     try {
       const result = await apiPost<{
@@ -253,6 +269,11 @@ export default function HomePage() {
       setActiveCoupon(null);
       setCouponStatus(error instanceof Error ? error.message : "Invalid or expired coupon.");
     }
+  }
+
+  function selectOffer(coupon: PublicCoupon) {
+    setCouponInput(coupon.code);
+    setCouponStatus(selectedProperty ? `${coupon.code} selected. Tap Apply to validate it for this booking.` : `${coupon.code} copied to checkout. Choose a property, then apply it.`);
   }
 
   function shareProperty(property: Property) {
@@ -648,12 +669,14 @@ export default function HomePage() {
           <p>Choose a live property first, then apply one of these backend-validated coupons during checkout.</p>
           <div className="coupon-pill-list">
             {publicCoupons.length ? publicCoupons.map((coupon) => (
-              <button type="button" key={coupon.code} onClick={() => setCouponInput(coupon.code)}>
+              <button type="button" key={coupon.code} onClick={() => selectOffer(coupon)}>
                 <strong>{coupon.code}</strong>
-                <span>{coupon.type === "FLAT" ? formatMoney(coupon.value) : `${coupon.value}%`} off</span>
+                <span>{formatCouponOffer(coupon)}</span>
+                <small>{formatCouponExpiry(coupon.expiresAt)}</small>
               </button>
             )) : <span>No active coupons right now.</span>}
           </div>
+          {couponStatus ? <p className="coupon-result">{couponStatus}</p> : null}
         </div>
         <div className="referral-box">
           <h3>Refer and Earn</h3>
@@ -769,8 +792,18 @@ export default function HomePage() {
               </div>
               <div className="coupon-input-wrap modal-coupon-row">
                 <input value={couponInput} onChange={(event) => setCouponInput(event.target.value)} placeholder={publicCoupons[0]?.code ?? "Enter active coupon code"} />
-                <button type="button" onClick={applyCoupon}>Apply</button>
+                <button type="button" onClick={() => applyCoupon()}>Apply</button>
               </div>
+              {publicCoupons.length ? (
+                <div className="modal-offer-picks">
+                  {publicCoupons.slice(0, 4).map((coupon) => (
+                    <button type="button" key={coupon.code} onClick={() => applyCoupon(coupon.code)}>
+                      <strong>{coupon.code}</strong>
+                      <span>{formatCouponOffer(coupon)}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : null}
               {couponStatus ? <p className="coupon-result modal-status">{couponStatus}</p> : null}
               {checkoutMessage ? <p className="checkout-status">{checkoutMessage}</p> : null}
               <button

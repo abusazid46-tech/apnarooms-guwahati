@@ -13,13 +13,47 @@ import {
 
 export const couponsRoutes = Router();
 
-const couponSchema = z.object({
+const optionalPositiveInt = z.preprocess(
+  (value) => (value === "" || value === null ? null : value),
+  z.coerce.number().int().positive().nullable().optional()
+);
+
+const optionalDate = z.preprocess(
+  (value) => (value === "" || value === null ? null : value),
+  z.coerce.date().nullable().optional()
+);
+
+const couponBaseSchema = z.object({
   code: z.string().min(3).max(40),
   type: z.enum(["PERCENT", "FLAT"]),
   value: z.coerce.number().int().positive(),
-  maxDiscount: z.coerce.number().int().positive().optional(),
+  maxDiscount: optionalPositiveInt,
   isActive: z.boolean().optional(),
-  expiresAt: z.coerce.date().optional()
+  expiresAt: optionalDate
+});
+
+function validatePercentOffer(input: { type?: "PERCENT" | "FLAT"; value?: number }, ctx: z.RefinementCtx) {
+  if (input.type === "PERCENT" && typeof input.value === "number" && input.value > 100) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["value"],
+      message: "Percentage offers cannot be above 100"
+    });
+  }
+}
+
+const couponSchema = couponBaseSchema.superRefine(validatePercentOffer);
+const couponUpdateSchema = couponBaseSchema.partial().superRefine((input, ctx) => {
+  if (input.type === "PERCENT") {
+    validatePercentOffer(input, ctx);
+  }
+  if (!input.type && typeof input.value === "number" && input.value > 100) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["value"],
+        message: "Set the offer type when changing a percentage value above 100"
+      });
+    }
 });
 
 const validateSchema = z.object({
@@ -49,7 +83,7 @@ couponsRoutes.post("/admin", authMiddleware, adminMiddleware, async (req, res) =
 });
 
 couponsRoutes.patch("/admin/:id", authMiddleware, adminMiddleware, async (req, res) => {
-  const coupon = await updateCoupon(String(req.params.id), couponSchema.partial().parse(req.body));
+  const coupon = await updateCoupon(String(req.params.id), couponUpdateSchema.parse(req.body));
   res.json({ coupon });
 });
 

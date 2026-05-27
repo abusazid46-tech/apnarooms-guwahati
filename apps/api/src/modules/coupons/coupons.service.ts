@@ -5,9 +5,9 @@ type CouponInput = {
   code: string;
   type: "PERCENT" | "FLAT";
   value: number;
-  maxDiscount?: number;
+  maxDiscount?: number | null;
   isActive?: boolean;
-  expiresAt?: Date;
+  expiresAt?: Date | null;
 };
 
 function normalizeCode(code: string) {
@@ -69,9 +69,9 @@ export async function createCoupon(input: CouponInput) {
       code: normalizeCode(input.code),
       type: input.type,
       value: input.value,
-      maxDiscount: input.maxDiscount,
+      maxDiscount: input.maxDiscount ?? null,
       isActive: input.isActive ?? true,
-      expiresAt: input.expiresAt
+      expiresAt: input.expiresAt ?? null
     }
   });
 }

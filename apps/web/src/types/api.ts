@@ -71,6 +71,18 @@ export type BackendLead = {
   createdAt: string;
 };
 
+export type BackendCoupon = {
+  id: string;
+  code: string;
+  type: "PERCENT" | "FLAT";
+  value: number;
+  maxDiscount?: number | null;
+  isActive: boolean;
+  expiresAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type Paginated<TName extends string, T> = Record<TName, T[]> & {
   pagination: {
     page: number;

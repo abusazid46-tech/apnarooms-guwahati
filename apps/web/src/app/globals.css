@@ -1077,6 +1077,35 @@ a {
   font-size: 0.82rem;
 }
 
+.coupon-pill-list button small {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.modal-offer-picks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.modal-offer-picks button {
+  display: grid;
+  gap: 3px;
+  border: 1px solid #dfe6f2;
+  border-radius: 8px;
+  padding: 9px 11px;
+  background: #f8faff;
+  color: var(--blue-deep);
+  text-align: left;
+}
+
+.modal-offer-picks span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
 .referral-box {
   border: 1px solid rgba(249, 115, 22, 0.25);
   border-radius: 1rem;
@@ -1860,6 +1889,28 @@ a {
   opacity: 0.72;
 }
 
+.offer-form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.offer-form-grid .admin-form-actions {
+  grid-column: 1 / -1;
+}
+
+.admin-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.offer-row {
+  grid-template-columns: 1fr 1.35fr 0.9fr 0.75fr 1.6fr;
+}
+
+.offer-row .admin-actions {
+  justify-content: flex-start;
+}
+
 .auth-success {
   display: grid;
   gap: 10px;
@@ -2110,6 +2161,10 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .offer-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
   .dashboard-stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -2138,6 +2193,7 @@ a {
   .blog-grid-lux,
   .admin-stat-grid,
   .dashboard-stat-grid,
+  .offer-form-grid,
   .lead-row,
   .admin-sidebar nav {
     grid-template-columns: 1fr;
