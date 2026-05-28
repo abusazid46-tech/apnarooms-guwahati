@@ -19,6 +19,7 @@ type Property = {
   verified: boolean;
   available: boolean;
   category: PropertyCategory;
+  billingUnit: "month" | "day";
   details: string[];
   images: string[];
 };
@@ -91,6 +92,18 @@ function tokenFor(property: Property) {
   return property.tokenAmount;
 }
 
+function pricePeriod(property: Pick<Property, "billingUnit">) {
+  return property.billingUnit === "day" ? "/day" : "/mo";
+}
+
+function priceLine(property: Pick<Property, "price" | "billingUnit">) {
+  return `${formatMoney(property.price)}${pricePeriod(property)}`;
+}
+
+function rateLabel(property: Pick<Property, "billingUnit">) {
+  return property.billingUnit === "day" ? "Daily Rate" : "Monthly Rent";
+}
+
 function normaliseImages(images: string[]) {
   const sourceImages = images.filter(Boolean).slice(0, 3);
   if (!sourceImages.length) return [];
@@ -119,6 +132,7 @@ function mapBackendProperty(property: BackendProperty): Property {
     verified: property.isVerified,
     available: property.isAvailable,
     category: categoryMap[property.category],
+    billingUnit: property.category === "HOMESTAY" ? "day" : "month",
     details: property.amenities.length ? property.amenities : [property.category, property.isAvailable ? "Available" : "Reserved"],
     images: normaliseImages(property.images.map((image) => image.url))
   };
@@ -278,7 +292,7 @@ export default function HomePage() {
 
   function shareProperty(property: Property) {
     const origin = window.location.origin;
-    const text = `ApnaRooms listing: ${property.name}\n${property.locality} | ${formatMoney(property.price)}/mo\n${origin}/properties/${property.id}`;
+    const text = `ApnaRooms listing: ${property.name}\n${property.locality} | ${priceLine(property)}\n${origin}/properties/${property.id}`;
     window.location.href = `https://wa.me/?text=${encodeURIComponent(text)}`;
   }
 
@@ -288,7 +302,7 @@ export default function HomePage() {
       "Hi ApnaRooms, I want to book this property.",
       `Property: ${property.name}`,
       `Locality: ${property.locality}`,
-      `Rent: ${formatMoney(property.price)}/mo`,
+      `${rateLabel(property)}: ${priceLine(property)}`,
       `Token: ${formatMoney(property.tokenAmount)}`,
       `Link: ${origin}/properties/${property.id}`
     ].join("\n");
@@ -583,7 +597,7 @@ export default function HomePage() {
                     ))}
                   </div>
                   <div className="card-action-row">
-                    <strong>{formatMoney(property.price)}<small>/mo</small></strong>
+                    <strong>{formatMoney(property.price)}<small>{pricePeriod(property)}</small></strong>
                     <div>
                       <button type="button" className="btn-share-card" onClick={() => shareProperty(property)}>
                         <i className="bi bi-share-fill" />
@@ -785,7 +799,7 @@ export default function HomePage() {
             <div className="modal-body-lux">
               <h3>{selectedProperty.name}</h3>
               <div className="booking-summary">
-                <div><span>Monthly Rent</span><strong>{formatMoney(selectedProperty.price)}</strong></div>
+                <div><span>{rateLabel(selectedProperty)}</span><strong>{priceLine(selectedProperty)}</strong></div>
                 <div><span>Token Fee</span><strong>{formatMoney(token)}</strong></div>
                 {savings > 0 ? <div className="success-row"><span>{activeCoupon?.code}</span><strong>-{formatMoney(savings)}</strong></div> : null}
                 <div className="total-row"><span>Total Payable</span><strong>{formatMoney(total)}</strong></div>

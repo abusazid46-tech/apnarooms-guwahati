@@ -196,7 +196,7 @@ export default function AdminPropertiesPage() {
               <option value="FLAT">Flat</option>
               <option value="ROOM">Room</option>
             </select>
-            <input value={form.rentMonthly} onChange={(e) => setForm({ ...form, rentMonthly: e.target.value })} placeholder="Monthly rent" />
+            <input value={form.rentMonthly} onChange={(e) => setForm({ ...form, rentMonthly: e.target.value })} placeholder={form.category === "HOMESTAY" ? "Daily rate" : "Monthly rent"} />
             <input value={form.depositAmount} onChange={(e) => setForm({ ...form, depositAmount: e.target.value })} placeholder="Deposit amount" />
             <input value={form.tokenAmount} onChange={(e) => setForm({ ...form, tokenAmount: e.target.value })} placeholder="Token amount" />
             <input value={form.locality} onChange={(e) => setForm({ ...form, locality: e.target.value })} placeholder="Locality" />
@@ -244,7 +244,7 @@ export default function AdminPropertiesPage() {
                 )}
                 <div>
                   <h3>{property.title}</h3>
-                  <p>{property.locality} | INR {property.rentMonthly.toLocaleString("en-IN")} | {property.status}</p>
+                  <p>{property.locality} | INR {property.rentMonthly.toLocaleString("en-IN")}{property.category === "HOMESTAY" ? "/day" : "/mo"} | {property.status}</p>
                   <div className="admin-actions">
                     <a className="admin-inline-link" href={`/admin/properties/${property.id}/edit`}>Edit</a>
                     <button type="button" onClick={() => updateStatus(property, "PUBLISHED")}>Publish</button>

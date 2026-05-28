@@ -61,19 +61,42 @@ export async function createBooking(firebaseUid: string, input: CreateBookingInp
     return existingBooking;
   }
 
+  const previousBookingCount = await prisma.booking.count({ where: { tenantId: user.id } });
   const couponResult = input.couponCode
     ? await applyCouponToAmount(input.couponCode, property.tokenAmount)
     : { finalAmount: property.tokenAmount };
 
-  return prisma.booking.create({
-    data: {
-      tenantId: user.id,
-      propertyId: property.id,
-      tokenAmount: couponResult.finalAmount,
-      moveInDate: input.moveInDate,
-      status: "PENDING_PAYMENT"
-    },
-    include: bookingInclude
+  return prisma.$transaction(async (tx: any) => {
+    const booking = await tx.booking.create({
+      data: {
+        tenantId: user.id,
+        propertyId: property.id,
+        tokenAmount: couponResult.finalAmount,
+        moveInDate: input.moveInDate,
+        status: "PENDING_PAYMENT"
+      },
+      include: bookingInclude
+    });
+
+    if (previousBookingCount === 0) {
+      await tx.lead.create({
+        data: {
+          name: user.name ?? "First-time booker",
+          phone: user.phone,
+          email: user.email,
+          source: "first_booking",
+          propertyId: property.id,
+          message: [
+            "First-time service booker created a booking request.",
+            `Booking ID: ${booking.id}`,
+            `Property: ${property.title}`,
+            `Token amount: INR ${booking.tokenAmount}`
+          ].join("\n")
+        }
+      });
+    }
+
+    return booking;
   });
 }
 
