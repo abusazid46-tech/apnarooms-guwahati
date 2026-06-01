@@ -1,11 +1,14 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { useAdminGuard } from "@/hooks/useAdminGuard";
+import { apiFetch } from "@/lib/api";
+import type { BackendNotification } from "@/types/api";
 
 const links = [
   ["/admin", "Dashboard"],
+  ["/admin/notifications", "Notifications"],
   ["/admin/properties", "Properties"],
   ["/admin/bookings", "Bookings"],
   ["/admin/offers", "Offers"],
@@ -17,6 +20,14 @@ const links = [
 
 export function AdminShell({ children, active }: { children: ReactNode; active: string }) {
   const { user, profile, loading, isAdmin } = useAdminGuard();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    if (!user || !isAdmin) return;
+    apiFetch<{ notifications: BackendNotification[]; unreadCount: number }>("/notifications/admin", { user })
+      .then((result) => setUnreadCount(result.unreadCount))
+      .catch(() => setUnreadCount(0));
+  }, [isAdmin, user]);
 
   if (loading) {
     return <main className="admin-gate">Checking admin session...</main>;
@@ -52,6 +63,7 @@ export function AdminShell({ children, active }: { children: ReactNode; active: 
           {links.map(([href, label]) => (
             <a className={active === href ? "active" : ""} href={href} key={href}>
               {label}
+              {href === "/admin/notifications" && unreadCount > 0 ? <span className="admin-nav-badge">{unreadCount}</span> : null}
             </a>
           ))}
           <button

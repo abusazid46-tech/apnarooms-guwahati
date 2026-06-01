@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
-import type { BackendBooking, BackendLead, BackendPayment, BackendProperty, BackendUser, Paginated } from "@/types/api";
+import type { BackendBooking, BackendLead, BackendNotification, BackendPayment, BackendProperty, BackendUser, Paginated } from "@/types/api";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -13,6 +13,8 @@ export default function AdminPage() {
   const [leads, setLeads] = useState<BackendLead[]>([]);
   const [payments, setPayments] = useState<BackendPayment[]>([]);
   const [users, setUsers] = useState<BackendUser[]>([]);
+  const [notifications, setNotifications] = useState<BackendNotification[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -21,20 +23,19 @@ export default function AdminPage() {
       apiFetch<Paginated<"bookings", BackendBooking>>("/bookings/admin?limit=100", { user }),
       apiFetch<Paginated<"leads", BackendLead>>("/leads/admin?limit=100", { user }),
       apiFetch<Paginated<"payments", BackendPayment>>("/payments/admin?limit=100", { user }),
-      apiFetch<{ users: BackendUser[] }>("/users/admin", { user })
-    ]).then(([propertyResult, bookingResult, leadResult, paymentResult, userResult]) => {
+      apiFetch<{ users: BackendUser[] }>("/users/admin", { user }),
+      apiFetch<{ notifications: BackendNotification[]; unreadCount: number }>("/notifications/admin", { user })
+    ]).then(([propertyResult, bookingResult, leadResult, paymentResult, userResult, notificationResult]) => {
       setProperties(propertyResult.properties);
       setBookings(bookingResult.bookings);
       setLeads(leadResult.leads);
       setPayments(paymentResult.payments);
       setUsers(userResult.users);
+      setNotifications(notificationResult.notifications);
+      setUnreadCount(notificationResult.unreadCount);
     }).catch(() => {});
   }, [user]);
 
-  const paidAmount = useMemo(
-    () => payments.filter((payment) => payment.status === "PAID").reduce((sum, payment) => sum + payment.amount, 0),
-    [payments]
-  );
   const leadCounts = useMemo(() => {
     return leads.reduce<Record<string, number>>((acc, lead) => {
       acc[lead.status] = (acc[lead.status] ?? 0) + 1;
@@ -57,7 +58,7 @@ export default function AdminPage() {
           <article><span>Properties</span><strong>{properties.length}</strong><small>Inventory</small></article>
           <article><span>Bookings</span><strong>{bookings.length}</strong><small>All time</small></article>
           <article><span>Leads</span><strong>{leads.length}</strong><small>CRM desk</small></article>
-          <article><span>Revenue</span><strong>INR {paidAmount.toLocaleString("en-IN")}</strong><small>Paid tokens</small></article>
+          <article><span>Alerts</span><strong>{unreadCount}</strong><small>Unread events</small></article>
         </div>
 
         <div className="admin-two-col">
@@ -79,6 +80,23 @@ export default function AdminPage() {
             </div>
           </section>
         </div>
+
+        <section className="admin-panel">
+          <div className="admin-panel-head"><h2>Latest Notifications</h2><a href="/admin/notifications">Open Notifications</a></div>
+          <div className="notification-list compact">
+            {notifications.slice(0, 5).map((notification) => (
+              <article className={notification.readAt ? "notification-item" : "notification-item unread"} key={notification.id}>
+                <div>
+                  <span>{notification.type.replaceAll("_", " ")}</span>
+                  <h3>{notification.title}</h3>
+                  {notification.body ? <p>{notification.body}</p> : null}
+                </div>
+                {notification.href ? <a href={notification.href}>Open</a> : null}
+              </article>
+            ))}
+            {!notifications.length ? <p className="admin-form-note">No recent events yet.</p> : null}
+          </div>
+        </section>
 
         <section className="admin-panel">
           <div className="admin-panel-head"><h2>Latest Leads</h2><a href="/admin/leads">Open CRM</a></div>

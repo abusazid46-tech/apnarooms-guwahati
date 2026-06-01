@@ -83,6 +83,16 @@ export type BackendCoupon = {
   updatedAt: string;
 };
 
+export type BackendNotification = {
+  id: string;
+  type: string;
+  title: string;
+  body?: string | null;
+  href?: string | null;
+  readAt?: string | null;
+  createdAt: string;
+};
+
 export type Paginated<TName extends string, T> = Record<TName, T[]> & {
   pagination: {
     page: number;

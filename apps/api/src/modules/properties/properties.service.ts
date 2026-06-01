@@ -238,13 +238,24 @@ export async function createOwnerProperty(firebaseUid: string, input: PropertyIn
     });
   }
 
-  return createProperty({
+  const property = await createProperty({
     ...input,
     status: "DRAFT",
     isVerified: false,
     isAvailable: input.isAvailable ?? true,
     landlordId: user.id
   });
+
+  await prisma.adminNotification.create({
+    data: {
+      type: "OWNER_PROPERTY_SUBMITTED",
+      title: "New owner listing needs approval",
+      body: `${user.name ?? user.email ?? user.phone ?? "A property owner"} submitted ${property.title} in ${property.locality}.`,
+      href: "/admin/properties"
+    }
+  });
+
+  return property;
 }
 
 export async function updateProperty(id: string, input: Partial<PropertyInput>) {
@@ -292,14 +303,25 @@ export async function updateProperty(id: string, input: Partial<PropertyInput>) 
 }
 
 export async function updateOwnerProperty(firebaseUid: string, id: string, input: Partial<PropertyInput>) {
-  await getOwnerProperty(firebaseUid, id);
+  const existing = await getOwnerProperty(firebaseUid, id);
 
-  return updateProperty(id, {
+  const property = await updateProperty(id, {
     ...input,
     status: "DRAFT",
     isVerified: false,
     landlordId: undefined
   });
+
+  await prisma.adminNotification.create({
+    data: {
+      type: "OWNER_PROPERTY_UPDATED",
+      title: "Owner listing edited",
+      body: `${property.landlord?.name ?? property.landlord?.email ?? "A property owner"} edited ${existing.title}. Review before publishing.`,
+      href: "/admin/properties"
+    }
+  });
+
+  return property;
 }
 
 export async function updateOwnerAvailability(firebaseUid: string, id: string, isAvailable: boolean) {

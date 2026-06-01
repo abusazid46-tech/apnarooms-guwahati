@@ -7,6 +7,7 @@ import { couponsRoutes } from "./modules/coupons/coupons.routes.js";
 import { leadsRoutes } from "./modules/leads/leads.routes.js";
 import { paymentsRoutes } from "./modules/payments/payments.routes.js";
 import { webhookRoutes } from "./modules/payments/webhook.routes.js";
+import { notificationsRoutes } from "./modules/notifications/notifications.routes.js";
 import { propertiesRoutes } from "./modules/properties/properties.routes.js";
 import { uploadsRoutes } from "./modules/uploads/uploads.routes.js";
 import { usersRoutes } from "./modules/users/users.routes.js";
@@ -51,6 +52,7 @@ export function createApp() {
   app.use("/api/payments", paymentsRoutes);
   app.use("/api/leads", leadsRoutes);
   app.use("/api/coupons", couponsRoutes);
+  app.use("/api/notifications", notificationsRoutes);
   app.use("/api/uploads", uploadsRoutes);
   app.use(errorMiddleware);
 

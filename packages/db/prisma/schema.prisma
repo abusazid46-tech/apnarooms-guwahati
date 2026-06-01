@@ -202,3 +202,17 @@ model AdminNote {
   @@index([propertyId])
   @@index([actorId])
 }
+
+model AdminNotification {
+  id        String    @id @default(cuid())
+  type      String
+  title     String
+  body      String?
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([readAt])
+  @@index([createdAt])
+  @@index([type])
+}

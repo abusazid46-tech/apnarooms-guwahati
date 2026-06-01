@@ -96,6 +96,15 @@ export async function createBooking(firebaseUid: string, input: CreateBookingInp
       });
     }
 
+    await tx.adminNotification.create({
+      data: {
+        type: "BOOKING_CREATED",
+        title: "New booking request",
+        body: `${user.name ?? user.email ?? user.phone ?? "A user"} started booking ${property.title} with token INR ${booking.tokenAmount}.`,
+        href: "/admin/bookings"
+      }
+    });
+
     return booking;
   });
 }

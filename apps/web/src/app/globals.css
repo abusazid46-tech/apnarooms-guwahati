@@ -1472,6 +1472,7 @@ a {
 
 .admin-sidebar a,
 .admin-sidebar button {
+  position: relative;
   border: 0;
   border-radius: 8px;
   padding: 12px 14px;
@@ -1479,6 +1480,20 @@ a {
   color: #b8c8ea;
   font-weight: 800;
   text-align: left;
+}
+
+.admin-nav-badge {
+  position: absolute;
+  right: 10px;
+  top: 9px;
+  min-width: 22px;
+  border-radius: 999px;
+  padding: 2px 6px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 950;
+  text-align: center;
 }
 
 .admin-sidebar a.active,
@@ -1584,6 +1599,68 @@ a {
 
 .pipeline-list strong {
   color: var(--blue-mid);
+}
+
+.notification-list {
+  display: grid;
+  gap: 10px;
+}
+
+.notification-list.compact {
+  gap: 8px;
+}
+
+.notification-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+  border: 1px solid #e6ebf4;
+  border-left: 4px solid #aab8cf;
+  border-radius: 10px;
+  padding: 13px;
+  background: #fbfcff;
+}
+
+.notification-item.unread {
+  border-left-color: var(--orange);
+  background: #fffaf3;
+}
+
+.notification-item span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.notification-item h3 {
+  margin: 4px 0;
+  color: var(--blue-deep);
+}
+
+.notification-item p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.notification-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.notification-item a,
+.notification-actions button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  background: var(--blue-mid);
+  color: #fff;
+  font-weight: 900;
 }
 
 .payment-meter strong {
@@ -2278,6 +2355,7 @@ a {
 
   .dashboard-booking-list article,
   .dashboard-booking-body,
+  .notification-item,
   .owner-property-list article {
     grid-template-columns: 1fr;
     align-items: stretch;
