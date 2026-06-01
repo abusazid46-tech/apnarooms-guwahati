@@ -77,12 +77,12 @@ function buildWhere(query: Record<string, unknown>, admin = false): any {
   const isAvailable = asBoolean(query.available);
 
   return {
-    ...(!admin ? { status: "PUBLISHED" } : status ? { status } : {}),
+    ...(!admin ? { status: "PUBLISHED", isAvailable: true } : status ? { status } : {}),
     ...(category ? { category } : {}),
     ...(locality ? { locality: { contains: locality, mode: "insensitive" } } : {}),
     ...(city ? { city: { contains: city, mode: "insensitive" } } : {}),
     ...(typeof isVerified === "boolean" ? { isVerified } : {}),
-    ...(typeof isAvailable === "boolean" ? { isAvailable } : {}),
+    ...(admin && typeof isAvailable === "boolean" ? { isAvailable } : {}),
     ...(minPrice || maxPrice
       ? {
           rentMonthly: {
@@ -150,6 +150,7 @@ export async function getPublicProperty(idOrSlug: string) {
   const property = await prisma.property.findFirst({
     where: {
       status: "PUBLISHED",
+      isAvailable: true,
       OR: [{ id: idOrSlug }, { slug: idOrSlug }]
     },
     include: propertyInclude
