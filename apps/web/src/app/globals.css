@@ -1972,6 +1972,73 @@ a {
   margin: 0 auto;
 }
 
+.owner-dashboard-card {
+  margin-top: 22px;
+}
+
+.owner-property-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.owner-property-form textarea,
+.owner-property-form .admin-file-field,
+.owner-property-form .admin-form-note,
+.owner-property-form .auth-message,
+.owner-property-form button {
+  grid-column: 1 / -1;
+}
+
+.owner-property-list {
+  display: grid;
+  gap: 12px;
+}
+
+.owner-property-list article {
+  display: grid;
+  grid-template-columns: 150px 1fr;
+  gap: 14px;
+  border: 1px solid #e6ebf4;
+  border-radius: 12px;
+  padding: 12px;
+  background: #fbfcff;
+}
+
+.owner-property-list img,
+.owner-property-list .admin-thumb-placeholder {
+  width: 100%;
+  height: 112px;
+  border-radius: 8px;
+  object-fit: cover;
+}
+
+.owner-property-list h3 {
+  margin: 0;
+  color: var(--blue-deep);
+}
+
+.owner-property-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-top: 12px;
+}
+
+.owner-property-actions button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: var(--blue-mid);
+  color: #fff;
+  font-weight: 900;
+}
+
+.owner-property-actions span {
+  color: var(--muted);
+  font-weight: 900;
+}
+
 .dashboard-head {
   display: flex;
   align-items: flex-start;
@@ -2194,6 +2261,7 @@ a {
   .admin-stat-grid,
   .dashboard-stat-grid,
   .offer-form-grid,
+  .owner-property-form,
   .lead-row,
   .admin-sidebar nav {
     grid-template-columns: 1fr;
@@ -2209,7 +2277,8 @@ a {
   }
 
   .dashboard-booking-list article,
-  .dashboard-booking-body {
+  .dashboard-booking-body,
+  .owner-property-list article {
     grid-template-columns: 1fr;
     align-items: stretch;
     flex-direction: column;

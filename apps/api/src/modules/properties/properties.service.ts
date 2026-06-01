@@ -169,6 +169,27 @@ export async function getAdminProperty(id: string) {
   return property;
 }
 
+export async function listOwnerProperties(firebaseUid: string) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { firebaseUid } });
+
+  return prisma.property.findMany({
+    where: { landlordId: user.id },
+    include: propertyInclude,
+    orderBy: { createdAt: "desc" }
+  });
+}
+
+export async function getOwnerProperty(firebaseUid: string, id: string) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { firebaseUid } });
+  const property = await prisma.property.findFirst({
+    where: { id, landlordId: user.id },
+    include: propertyInclude
+  });
+
+  if (!property) throw new ApiError(404, "Property not found");
+  return property;
+}
+
 export async function createProperty(input: PropertyInput) {
   const slug = input.slug ?? `${slugify(input.title)}-${Date.now().toString(36)}`;
 
@@ -203,6 +224,25 @@ export async function createProperty(input: PropertyInput) {
         : undefined
     },
     include: propertyInclude
+  });
+}
+
+export async function createOwnerProperty(firebaseUid: string, input: PropertyInput) {
+  const user = await prisma.user.findUniqueOrThrow({ where: { firebaseUid } });
+
+  if (user.role === "USER") {
+    await prisma.user.update({
+      where: { id: user.id },
+      data: { role: "LANDLORD" }
+    });
+  }
+
+  return createProperty({
+    ...input,
+    status: "DRAFT",
+    isVerified: false,
+    isAvailable: input.isAvailable ?? true,
+    landlordId: user.id
   });
 }
 
@@ -250,6 +290,27 @@ export async function updateProperty(id: string, input: Partial<PropertyInput>) 
   });
 }
 
+export async function updateOwnerProperty(firebaseUid: string, id: string, input: Partial<PropertyInput>) {
+  await getOwnerProperty(firebaseUid, id);
+
+  return updateProperty(id, {
+    ...input,
+    status: "DRAFT",
+    isVerified: false,
+    landlordId: undefined
+  });
+}
+
+export async function updateOwnerAvailability(firebaseUid: string, id: string, isAvailable: boolean) {
+  await getOwnerProperty(firebaseUid, id);
+
+  return prisma.property.update({
+    where: { id },
+    data: { isAvailable },
+    include: propertyInclude
+  });
+}
+
 export async function archiveProperty(id: string) {
   await getAdminProperty(id);
 
@@ -262,6 +323,20 @@ export async function archiveProperty(id: string) {
 
 export async function addPropertyImage(propertyId: string, input: ImageInput) {
   await getAdminProperty(propertyId);
+
+  return prisma.propertyImage.create({
+    data: {
+      propertyId,
+      url: input.url,
+      path: input.path,
+      alt: input.alt,
+      sortOrder: input.sortOrder ?? 0
+    }
+  });
+}
+
+export async function addOwnerPropertyImage(firebaseUid: string, propertyId: string, input: ImageInput) {
+  await getOwnerProperty(firebaseUid, propertyId);
 
   return prisma.propertyImage.create({
     data: {

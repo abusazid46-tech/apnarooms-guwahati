@@ -13,6 +13,7 @@ export default function LoginPage() {
   const [message, setMessage] = useState("");
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
+  const isOwnerLogin = nextPath.includes("owner=1");
 
   useEffect(() => {
     const next = new URLSearchParams(window.location.search).get("next");
@@ -63,8 +64,8 @@ export default function LoginPage() {
     <main className="auth-page">
       <section className="auth-card">
         <a href="/" className="auth-brand">ApnaRooms.com</a>
-        <h1>Login to continue</h1>
-        <p>Use Google or phone OTP. First synced account becomes the admin bootstrap user.</p>
+        <h1>{isOwnerLogin ? "Login or register as a property owner" : "Login to continue"}</h1>
+        <p>{isOwnerLogin ? "Use Google or phone OTP to open your owner dashboard and submit listings for admin approval." : "Use Google or phone OTP. First synced account becomes the admin bootstrap user."}</p>
 
         {loading ? <p>Checking session...</p> : null}
 

@@ -34,6 +34,19 @@ usersRoutes.patch("/me", authMiddleware, async (req, res) => {
   res.json({ user });
 });
 
+usersRoutes.post("/me/become-landlord", authMiddleware, async (_req, res) => {
+  const existing = await prisma.user.findUniqueOrThrow({
+    where: { firebaseUid: res.locals.firebaseUser.uid }
+  });
+
+  const user = await prisma.user.update({
+    where: { id: existing.id },
+    data: { role: existing.role === "USER" ? "LANDLORD" : existing.role }
+  });
+
+  res.json({ user });
+});
+
 usersRoutes.get("/admin", authMiddleware, adminMiddleware, async (_req, res) => {
   const users = await prisma.user.findMany({ orderBy: { createdAt: "desc" } });
   res.json({ users });

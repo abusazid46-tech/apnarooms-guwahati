@@ -420,6 +420,11 @@ export default function HomePage() {
     );
   }
 
+  function openOwnerDashboard() {
+    const nextPath = "/dashboard?owner=1";
+    window.location.href = user ? nextPath : `/login?next=${encodeURIComponent(nextPath)}`;
+  }
+
   return (
     <main className="tenant-site">
       <nav className="navbar-lux">
@@ -446,7 +451,7 @@ export default function HomePage() {
             className="nav-list-button"
             onClick={() => {
               setMobileMenuOpen(false);
-              setListingFormOpen(true);
+              openOwnerDashboard();
             }}
           >
             List Property
@@ -671,7 +676,7 @@ export default function HomePage() {
           <h2>List your property with ApnaRooms</h2>
           <p>Share your PG, hostel, room, flat, homestay, hotel, or guest house details. Our team will review and contact you on WhatsApp.</p>
         </div>
-        <button type="button" className="pay-cta-lux" onClick={() => setListingFormOpen(true)}>
+        <button type="button" className="pay-cta-lux" onClick={openOwnerDashboard}>
           <i className="bi bi-house-add" />
           List Your Property
         </button>

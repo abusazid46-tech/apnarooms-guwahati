@@ -4,13 +4,19 @@ import { authMiddleware } from "../../middleware/auth.middleware.js";
 import { adminMiddleware } from "../../middleware/admin.middleware.js";
 import {
   addPropertyImage,
+  addOwnerPropertyImage,
   archiveProperty,
+  createOwnerProperty,
   createProperty,
   deletePropertyImage,
   getAdminProperty,
+  getOwnerProperty,
   getPublicProperty,
   listAdminProperties,
+  listOwnerProperties,
   listProperties,
+  updateOwnerAvailability,
+  updateOwnerProperty,
   updateProperty
 } from "./properties.service.js";
 
@@ -69,6 +75,16 @@ propertiesRoutes.get("/admin/:id", authMiddleware, adminMiddleware, async (req, 
   res.json({ property });
 });
 
+propertiesRoutes.get("/owner", authMiddleware, async (_req, res) => {
+  const properties = await listOwnerProperties(res.locals.firebaseUser.uid);
+  res.json({ properties });
+});
+
+propertiesRoutes.get("/owner/:id", authMiddleware, async (req, res) => {
+  const property = await getOwnerProperty(res.locals.firebaseUser.uid, String(req.params.id));
+  res.json({ property });
+});
+
 propertiesRoutes.get("/:id", async (req, res) => {
   const property = await getPublicProperty(String(req.params.id));
   res.json({ property });
@@ -79,8 +95,24 @@ propertiesRoutes.post("/", authMiddleware, adminMiddleware, async (req, res) => 
   res.status(201).json({ property });
 });
 
+propertiesRoutes.post("/owner", authMiddleware, async (req, res) => {
+  const property = await createOwnerProperty(res.locals.firebaseUser.uid, propertySchema.parse(req.body));
+  res.status(201).json({ property });
+});
+
 propertiesRoutes.patch("/:id", authMiddleware, adminMiddleware, async (req, res) => {
   const property = await updateProperty(String(req.params.id), propertyUpdateSchema.parse(req.body));
+  res.json({ property });
+});
+
+propertiesRoutes.patch("/owner/:id", authMiddleware, async (req, res) => {
+  const property = await updateOwnerProperty(res.locals.firebaseUser.uid, String(req.params.id), propertyUpdateSchema.parse(req.body));
+  res.json({ property });
+});
+
+propertiesRoutes.patch("/owner/:id/availability", authMiddleware, async (req, res) => {
+  const input = z.object({ isAvailable: z.boolean() }).parse(req.body);
+  const property = await updateOwnerAvailability(res.locals.firebaseUser.uid, String(req.params.id), input.isAvailable);
   res.json({ property });
 });
 
@@ -91,6 +123,11 @@ propertiesRoutes.delete("/:id", authMiddleware, adminMiddleware, async (req, res
 
 propertiesRoutes.post("/:id/images", authMiddleware, adminMiddleware, async (req, res) => {
   const image = await addPropertyImage(String(req.params.id), imageSchema.parse(req.body));
+  res.status(201).json({ image });
+});
+
+propertiesRoutes.post("/owner/:id/images", authMiddleware, async (req, res) => {
+  const image = await addOwnerPropertyImage(res.locals.firebaseUser.uid, String(req.params.id), imageSchema.parse(req.body));
   res.status(201).json({ image });
 });
 
