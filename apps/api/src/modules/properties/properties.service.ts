@@ -1,4 +1,5 @@
 import { prisma } from "@apnarooms/db";
+import { createAdminNotification } from "../notifications/notifications.service.js";
 import { ApiError } from "../../utils/api-error.js";
 
 type PropertyInput = {
@@ -246,13 +247,11 @@ export async function createOwnerProperty(firebaseUid: string, input: PropertyIn
     landlordId: user.id
   });
 
-  await prisma.adminNotification.create({
-    data: {
-      type: "OWNER_PROPERTY_SUBMITTED",
-      title: "New owner listing needs approval",
-      body: `${user.name ?? user.email ?? user.phone ?? "A property owner"} submitted ${property.title} in ${property.locality}.`,
-      href: "/admin/properties"
-    }
+  await createAdminNotification({
+    type: "OWNER_PROPERTY_SUBMITTED",
+    title: "New owner listing needs approval",
+    body: `${user.name ?? user.email ?? user.phone ?? "A property owner"} submitted ${property.title} in ${property.locality}.`,
+    href: "/admin/properties"
   });
 
   return property;
@@ -312,13 +311,11 @@ export async function updateOwnerProperty(firebaseUid: string, id: string, input
     landlordId: undefined
   });
 
-  await prisma.adminNotification.create({
-    data: {
-      type: "OWNER_PROPERTY_UPDATED",
-      title: "Owner listing edited",
-      body: `${property.landlord?.name ?? property.landlord?.email ?? "A property owner"} edited ${existing.title}. Review before publishing.`,
-      href: "/admin/properties"
-    }
+  await createAdminNotification({
+    type: "OWNER_PROPERTY_UPDATED",
+    title: "Owner listing edited",
+    body: `${property.landlord?.name ?? property.landlord?.email ?? "A property owner"} edited ${existing.title}. Review before publishing.`,
+    href: "/admin/properties"
   });
 
   return property;

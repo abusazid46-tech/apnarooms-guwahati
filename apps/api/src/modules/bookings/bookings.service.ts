@@ -1,5 +1,6 @@
 import { prisma } from "@apnarooms/db";
 import { applyCouponToAmount } from "../coupons/coupons.service.js";
+import { ensureNotificationStorage } from "../notifications/notifications.service.js";
 import { ApiError } from "../../utils/api-error.js";
 
 type CreateBookingInput = {
@@ -65,6 +66,7 @@ export async function createBooking(firebaseUid: string, input: CreateBookingInp
   const couponResult = input.couponCode
     ? await applyCouponToAmount(input.couponCode, property.tokenAmount)
     : { finalAmount: property.tokenAmount };
+  await ensureNotificationStorage();
 
   return prisma.$transaction(async (tx: any) => {
     const booking = await tx.booking.create({

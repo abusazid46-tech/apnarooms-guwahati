@@ -212,78 +212,10 @@ a {
   background-clip: text;
   color: transparent;
   font-weight: 900;
-  opacity: 0;
-  transform: translate3d(var(--enter-x, -18px), 44px, 0) rotateZ(var(--enter-rot, -7deg)) rotateX(24deg);
-  animation:
-    headlineZigzagIn 0.72s cubic-bezier(0.2, 0.95, 0.4, 1.18) forwards,
-    headlineFloat 3.8s ease-in-out infinite alternate;
-  animation-delay: var(--delay, 0s), calc(var(--delay, 0s) + 1s);
-  will-change: transform, opacity;
-}
-
-.kinetic-headline h1 span:nth-child(odd) {
-  --enter-x: -24px;
-  --enter-rot: -8deg;
-  --float-x: -10px;
-  --float-rot: -4deg;
-}
-
-.kinetic-headline h1 span:nth-child(even) {
-  --enter-x: 24px;
-  --enter-rot: 8deg;
-  --float-x: 10px;
-  --float-rot: 4deg;
-}
-
-.kinetic-headline h1 span:nth-child(1) {
-  --delay: 0s;
-}
-
-.kinetic-headline h1 span:nth-child(2) {
-  --delay: 0.08s;
-}
-
-.kinetic-headline h1 span:nth-child(3) {
-  --delay: 0.16s;
-}
-
-.kinetic-headline h1 span:nth-child(4) {
-  --delay: 0.24s;
-}
-
-.kinetic-headline h1 span:nth-child(5) {
-  --delay: 0.32s;
-}
-
-.kinetic-headline h1 span:nth-child(6) {
-  --delay: 0.4s;
-}
-
-.kinetic-headline h1 span:nth-child(7) {
-  --delay: 0.48s;
 }
 
 .kinetic-headline h1 span:hover {
   filter: drop-shadow(0 0 12px rgba(249, 115, 22, 0.45));
-}
-
-@keyframes headlineZigzagIn {
-  to {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) rotateZ(0deg) rotateX(0deg);
-  }
-}
-
-@keyframes headlineFloat {
-  from {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) rotateZ(0deg);
-  }
-
-  to {
-    opacity: 1;
-    transform: translate3d(var(--float-x, 8px), -8px, 0) rotateZ(var(--float-rot, 4deg));
-  }
 }
 
 .kinetic-headline p {
