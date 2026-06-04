@@ -41,13 +41,26 @@ type PublicCoupon = {
   expiresAt?: string | null;
 };
 
-const categories: Array<{ value: "all" | PropertyCategory; label: string; icon: string }> = [
-  { value: "all", label: "All", icon: "bi-grid" },
-  { value: "PG", label: "PG", icon: "bi-building" },
-  { value: "Roommate", label: "Rooms", icon: "bi-door-open" },
-  { value: "Flat", label: "Flats", icon: "bi-houses" },
-  { value: "Homestay", label: "Homestays", icon: "bi-house-heart" }
+type CategoryTile = {
+  key: string;
+  value: "all" | PropertyCategory;
+  label: string;
+  icon: string;
+  query?: string;
+};
+
+const categories: CategoryTile[] = [
+  { key: "all", value: "all", label: "All", icon: "bi-grid" },
+  { key: "pg", value: "PG", label: "PG", icon: "bi-building" },
+  { key: "girls-pg", value: "PG", label: "Girls PG", icon: "bi-person-hearts", query: "girls" },
+  { key: "boys-pg", value: "PG", label: "Boys PG", icon: "bi-person-check", query: "boys" },
+  { key: "room", value: "Roommate", label: "Rooms", icon: "bi-door-open" },
+  { key: "flat", value: "Flat", label: "Flats", icon: "bi-houses" },
+  { key: "homestay", value: "Homestay", label: "Homestay", icon: "bi-house-heart" },
+  { key: "hostel", value: "all", label: "Hostel", icon: "bi-buildings", query: "hostel" }
 ];
+
+const defaultLocalities = ["Beltola", "Ganeshguri", "Six Mile", "GS Road", "Panjabari", "Kahilipara"];
 
 const initialListingForm = {
   ownerName: "",
@@ -312,6 +325,7 @@ export default function HomePage() {
         property.name.toLowerCase().includes(normalized) ||
         property.location.toLowerCase().includes(normalized) ||
         property.locality.toLowerCase().includes(normalized) ||
+        property.details.some((detail) => detail.toLowerCase().includes(normalized)) ||
         property.price.toString().includes(normalized);
       const matchesLocation = !location || property.locality === location;
       const matchesMin = min === null || property.price >= min;
@@ -324,6 +338,7 @@ export default function HomePage() {
     .map((id) => properties.find((property) => property.id === id))
     .filter((property): property is Property => Boolean(property));
   const heroPreviewProperty = properties.find((property) => property.images[0]) ?? properties[0];
+  const popularLocalities = (locations.length ? locations : defaultLocalities).slice(0, 6);
 
   const token = selectedProperty ? tokenFor(selectedProperty) : 0;
   const total = activeCoupon?.finalAmount ?? token;
@@ -517,6 +532,17 @@ export default function HomePage() {
     window.location.href = user ? nextPath : `/login?next=${encodeURIComponent(nextPath)}`;
   }
 
+  function selectCategory(item: CategoryTile) {
+    setCategory(item.value);
+    setQuery(item.query ?? "");
+    setLocation("");
+  }
+
+  function selectLocality(item: string) {
+    setLocation(item);
+    window.location.hash = "listings";
+  }
+
   return (
     <main className="tenant-site">
       <nav className="navbar-lux">
@@ -554,9 +580,16 @@ export default function HomePage() {
       <section className="hero-luxury">
         <div className="hero-inner">
           <div className="hero-copy">
-            <span className="hero-kicker">Guwahati accommodation marketplace</span>
+            <div className="app-welcome-row">
+              <div className="app-avatar">
+                <i className="bi bi-person-fill" />
+              </div>
+              <div>
+                <span className="hero-kicker">Welcome to ApnaRooms</span>
+                <p>{user?.displayName ? `Hi ${user.displayName.split(" ")[0]}, find your next stay.` : "Premium stays across Guwahati."}</p>
+              </div>
+            </div>
             <h1>Find PGs, Rooms, Flats & Homestays in Guwahati</h1>
-            <p>Verified stays, zero brokerage support, and easy booking across Guwahati and Northeast India.</p>
             <div className="hero-actions">
               <a href="#listings" className="hero-primary-action">
                 <i className="bi bi-search" />
@@ -629,30 +662,77 @@ export default function HomePage() {
             <div>
               <span>Featured stay</span>
               <strong>{heroPreviewProperty?.name ?? "Live verified properties"}</strong>
-              <small>{heroPreviewProperty ? `${heroPreviewProperty.locality} • ${priceLine(heroPreviewProperty)}` : "Add properties from admin to show live previews"}</small>
+              <small>{heroPreviewProperty ? `${heroPreviewProperty.locality} - ${priceLine(heroPreviewProperty)}` : "Add properties from admin to show live previews"}</small>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="tenant-container" id="listings">
+      <section className="tenant-container app-category-section">
+        <div className="app-section-head">
+          <div>
+            <span>Category</span>
+            <h2>Choose your stay type</h2>
+          </div>
+          <button type="button" onClick={() => {
+            setCategory("all");
+            setQuery("");
+          }} aria-label="See all categories">
+            <i className="bi bi-list" />
+          </button>
+        </div>
         <div className="category-scroll">
           {categories.map((item) => (
             <button
-              key={item.value}
+              key={item.key}
               type="button"
-              className={category === item.value ? "category-lux active" : "category-lux"}
-              onClick={() => setCategory(item.value)}
+              className={category === item.value && (item.query ? query === item.query : !query) ? "category-lux active" : "category-lux"}
+              onClick={() => selectCategory(item)}
             >
               <i className={`bi ${item.icon}`} />
-              {item.label}
+              <span>{item.label}</span>
             </button>
           ))}
         </div>
+      </section>
+
+      <section className="tenant-container popular-locality-section">
+        <div className="app-section-head">
+          <div>
+            <span>Popular Localities</span>
+            <h2>Explore near your preferred area</h2>
+          </div>
+          <button type="button" onClick={detectLocation} aria-label="Use my location">
+            <i className="bi bi-crosshair2" />
+          </button>
+        </div>
+        <div className="locality-grid">
+          {popularLocalities.map((item, index) => (
+            <button type="button" key={item} onClick={() => selectLocality(item)}>
+              <span>{item}</span>
+              <small>{index < 3 ? "Popular" : "Nearby"}</small>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="tenant-container app-owner-strip" id="list-property">
+        <div>
+          <span>For property owners</span>
+          <h2>List your PG, room or homestay</h2>
+          <p>Register as owner, add property details, and publish after admin approval.</p>
+        </div>
+        <button type="button" onClick={openOwnerDashboard}>
+          <i className="bi bi-plus-circle-fill" />
+          List Property
+        </button>
+      </section>
+
+      <section className="tenant-container" id="listings">
 
         <div className="listing-meta">
           <div>
-            <span>Live inventory</span>
+            <span>Recommended</span>
             <h2>Verified stays ready for booking</h2>
             {apiNotice ? <p className="api-notice">{apiNotice}</p> : null}
           </div>
@@ -761,18 +841,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="tenant-container list-property-section" id="list-property">
-        <div>
-          <span className="blog-tag">For Owners</span>
-          <h2>List your property with ApnaRooms</h2>
-          <p>Share your PG, hostel, room, flat, homestay, hotel, or guest house details. Our team will review and contact you on WhatsApp.</p>
-        </div>
-        <button type="button" className="pay-cta-lux" onClick={openOwnerDashboard}>
-          <i className="bi bi-house-add" />
-          List Your Property
-        </button>
-      </section>
-
       <section className="tenant-container coupon-section" id="coupon">
         <div>
           <h2>Active Booking Offers</h2>
@@ -840,6 +908,29 @@ export default function HomePage() {
           </div>
         </div>
       </footer>
+
+      <nav className="mobile-bottom-nav" aria-label="Primary mobile navigation">
+        <a href="#">
+          <i className="bi bi-house-fill" />
+          <span>Home</span>
+        </a>
+        <a href="#listings">
+          <i className="bi bi-compass" />
+          <span>Explore</span>
+        </a>
+        <button type="button" className="mobile-list-action" onClick={openOwnerDashboard}>
+          <i className="bi bi-plus-lg" />
+          <span>List</span>
+        </button>
+        <a href="#listings">
+          <i className="bi bi-search" />
+          <span>Search</span>
+        </a>
+        <a href="/dashboard">
+          <i className="bi bi-person-circle" />
+          <span>Profile</span>
+        </a>
+      </nav>
 
       {listingFormOpen ? (
         <div className="modal-layer" role="dialog" aria-modal="true">
