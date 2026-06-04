@@ -16,7 +16,9 @@ import { errorMiddleware } from "./middleware/error.middleware.js";
 
 const defaultAllowedOrigins = [
   "http://localhost:3000",
-  "https://apnarooms-guwahati-web.vercel.app"
+  "https://apnarooms-guwahati-web.vercel.app",
+  "https://www.apnarooms.com",
+  "https://apnarooms.com"
 ];
 
 const allowedOrigins = Array.from(
