@@ -42,9 +42,11 @@ type PublicCoupon = {
 };
 
 const categories: Array<{ value: "all" | PropertyCategory; label: string; icon: string }> = [
-  { value: "all", label: "All Estates", icon: "bi-crown-fill" },
-  { value: "PG", label: "PG Luxury", icon: "bi-building" },
-  { value: "Homestay", label: "Homestay", icon: "bi-flower1" }
+  { value: "all", label: "All", icon: "bi-grid" },
+  { value: "PG", label: "PG", icon: "bi-building" },
+  { value: "Roommate", label: "Rooms", icon: "bi-door-open" },
+  { value: "Flat", label: "Flats", icon: "bi-houses" },
+  { value: "Homestay", label: "Homestays", icon: "bi-house-heart" }
 ];
 
 const initialListingForm = {
@@ -321,6 +323,7 @@ export default function HomePage() {
   const recentProperties = recentIds
     .map((id) => properties.find((property) => property.id === id))
     .filter((property): property is Property => Boolean(property));
+  const heroPreviewProperty = properties.find((property) => property.images[0]) ?? properties[0];
 
   const token = selectedProperty ? tokenFor(selectedProperty) : 0;
   const total = activeCoupon?.finalAmount ?? token;
@@ -483,7 +486,7 @@ export default function HomePage() {
           email: user.email ?? "",
           contact: user.phoneNumber ?? ""
         },
-        theme: { color: "#f97316" }
+        theme: { color: "#e50914" }
       });
 
       razorpay.open();
@@ -550,17 +553,25 @@ export default function HomePage() {
 
       <section className="hero-luxury">
         <div className="hero-inner">
-          <div className="text-center kinetic-headline">
-            <h1>
-              <span>The</span>
-              <span>ApnaRooms</span>
-              <span>Atelier</span>
-              <span>Zero</span>
-              <span>Brokerage,</span>
-              <span>Infinite</span>
-              <span>Luxury.</span>
-            </h1>
-            <p>Verified PG, Rooms, Flats and Homestays in Guwahati. 0% Brokerage, 100% Trusted.</p>
+          <div className="hero-copy">
+            <span className="hero-kicker">Guwahati accommodation marketplace</span>
+            <h1>Find PGs, Rooms, Flats & Homestays in Guwahati</h1>
+            <p>Verified stays, zero brokerage support, and easy booking across Guwahati and Northeast India.</p>
+            <div className="hero-actions">
+              <a href="#listings" className="hero-primary-action">
+                <i className="bi bi-search" />
+                Explore Listings
+              </a>
+              <button type="button" className="hero-secondary-action" onClick={openOwnerDashboard}>
+                <i className="bi bi-house-add" />
+                List Your Property
+              </button>
+            </div>
+            <div className="hero-trust-row">
+              <span><i className="bi bi-patch-check-fill" /> Verified listings</span>
+              <span><i className="bi bi-whatsapp" /> WhatsApp support</span>
+              <span><i className="bi bi-shield-check" /> Secure token booking</span>
+            </div>
           </div>
 
           <div className="search-lux-shell">
@@ -606,6 +617,21 @@ export default function HomePage() {
               </div>
             ) : null}
           </div>
+
+          <div className="hero-preview-card">
+            {heroPreviewProperty?.images[0] ? (
+              <img src={heroPreviewProperty.images[0]} alt={heroPreviewProperty.name} />
+            ) : (
+              <div className="hero-preview-placeholder">
+                <i className="bi bi-house-heart" />
+              </div>
+            )}
+            <div>
+              <span>Featured stay</span>
+              <strong>{heroPreviewProperty?.name ?? "Live verified properties"}</strong>
+              <small>{heroPreviewProperty ? `${heroPreviewProperty.locality} • ${priceLine(heroPreviewProperty)}` : "Add properties from admin to show live previews"}</small>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -626,8 +652,8 @@ export default function HomePage() {
 
         <div className="listing-meta">
           <div>
-            <span>Live luxury inventory</span>
-            <h2>Verified rooms ready for secure token booking</h2>
+            <span>Live inventory</span>
+            <h2>Verified stays ready for booking</h2>
             {apiNotice ? <p className="api-notice">{apiNotice}</p> : null}
           </div>
           <button
