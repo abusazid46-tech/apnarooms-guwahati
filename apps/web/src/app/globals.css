@@ -85,21 +85,17 @@ a {
 .navbar-brand-lux {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: linear-gradient(125deg, #fff 0%, #ffb97a 50%, var(--orange) 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-size: clamp(1.25rem, 3vw, 2rem);
-  font-weight: 900;
-  letter-spacing: 0;
-  white-space: nowrap;
+  flex: 0 0 auto;
+  width: min(230px, 42vw);
+  min-width: 150px;
 }
 
-.navbar-brand-lux i {
-  color: var(--orange);
-  filter: drop-shadow(0 2px 8px rgba(249, 115, 22, 0.5));
-  font-size: 1.75rem;
+.navbar-brand-lux img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 42px;
+  object-fit: contain;
 }
 
 .nav-link-wrap {
