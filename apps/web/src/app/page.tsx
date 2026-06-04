@@ -138,6 +138,95 @@ function mapBackendProperty(property: BackendProperty): Property {
   };
 }
 
+function PropertyImageCarousel({ property }: { property: Property }) {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [engaged, setEngaged] = useState(false);
+  const imageCount = property.images.length;
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [property.id, imageCount]);
+
+  useEffect(() => {
+    if (!engaged || imageCount <= 1) return;
+
+    const interval = window.setInterval(() => {
+      setActiveIndex((current) => (current + 1) % imageCount);
+    }, 2200);
+
+    return () => window.clearInterval(interval);
+  }, [engaged, imageCount]);
+
+  function moveImage(direction: 1 | -1) {
+    if (imageCount <= 1) return;
+    setActiveIndex((current) => (current + direction + imageCount) % imageCount);
+  }
+
+  return (
+    <div
+      className="img-zoom-wrapper"
+      onMouseEnter={() => setEngaged(true)}
+      onMouseLeave={() => setEngaged(false)}
+      onFocus={() => setEngaged(true)}
+      onBlur={() => setEngaged(false)}
+    >
+      {imageCount ? (
+        <>
+          <div
+            className="card-slider"
+            aria-label={`${property.name} image gallery`}
+            style={{ transform: `translateX(-${activeIndex * 33.3333}%)` }}
+          >
+            {property.images.map((image, index) => (
+              <img key={`${image}-${index}`} src={image} alt={`${property.name} view ${index + 1}`} />
+            ))}
+          </div>
+          {imageCount > 1 ? (
+            <>
+              <button
+                type="button"
+                className="carousel-arrow carousel-arrow-left"
+                aria-label={`Show previous photo of ${property.name}`}
+                onClick={() => moveImage(-1)}
+              >
+                <i className="bi bi-chevron-left" />
+              </button>
+              <button
+                type="button"
+                className="carousel-arrow carousel-arrow-right"
+                aria-label={`Show next photo of ${property.name}`}
+                onClick={() => moveImage(1)}
+              >
+                <i className="bi bi-chevron-right" />
+              </button>
+              <div className="carousel-dots" aria-label={`${property.name} photo selector`}>
+                {property.images.map((image, index) => (
+                  <button
+                    key={`${image}-dot-${index}`}
+                    type="button"
+                    className={activeIndex === index ? "active" : ""}
+                    aria-label={`Show photo ${index + 1} of ${property.name}`}
+                    aria-current={activeIndex === index ? "true" : undefined}
+                    onClick={() => setActiveIndex(index)}
+                  />
+                ))}
+              </div>
+            </>
+          ) : null}
+        </>
+      ) : (
+        <div className="listing-image-placeholder">
+          <i className="bi bi-image" />
+          <span>Photos pending</span>
+        </div>
+      )}
+      {property.available ? (
+        property.verified ? <span className="verified-lux-badge">Certified Gold</span> : <span className="review-badge">Reviewing</span>
+      ) : <span className="review-badge">Reserved</span>}
+    </div>
+  );
+}
+
 export default function HomePage() {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -564,30 +653,7 @@ export default function HomePage() {
           <div className="property-grid-lux">
             {filtered.map((property) => (
               <article className="property-card-lux" key={property.id}>
-                <div className="img-zoom-wrapper">
-                  {property.images.length ? (
-                    <>
-                      <div className="card-slider" aria-label={`${property.name} image gallery`}>
-                        {property.images.map((image, index) => (
-                          <img key={`${image}-${index}`} src={image} alt={`${property.name} view ${index + 1}`} />
-                        ))}
-                      </div>
-                      <div className="carousel-dots" aria-hidden="true">
-                        <span />
-                        <span />
-                        <span />
-                      </div>
-                    </>
-                  ) : (
-                    <div className="listing-image-placeholder">
-                      <i className="bi bi-image" />
-                      <span>Photos pending</span>
-                    </div>
-                  )}
-                  {property.available ? (
-                    property.verified ? <span className="verified-lux-badge">Certified Gold</span> : <span className="review-badge">Reviewing</span>
-                  ) : <span className="review-badge">Reserved</span>}
-                </div>
+                <PropertyImageCarousel property={property} />
                 <div className="property-body">
                   <h3>{property.name}</h3>
                   <p>
