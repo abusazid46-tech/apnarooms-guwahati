@@ -6,6 +6,8 @@ const routes = [
   "",
   "/guwahati",
   "/guwahati-pg",
+  "/best-girls-pg-near-physics-wallah-guwahati",
+  "/boys-pg-near-physics-wallah-guwahati",
   "/rent-rooms-in-guwahati",
   "/affordable-rooms-for-rent-in-guwahati",
   "/homestay-in-guwahati",
