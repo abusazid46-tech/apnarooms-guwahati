@@ -22,7 +22,7 @@ export default function AboutPage() {
     <main className="about-page">
       <nav className="about-nav">
         <a className="navbar-brand-lux" href="/">
-          <img src="/brand/apnarooms-logo.jpeg" alt="ApnaRooms.com" />
+          <img src="/brand/apnarooms-logo.png" alt="ApnaRooms.com" />
         </a>
         <a className="admin-button" href="/">Back to Home</a>
       </nav>

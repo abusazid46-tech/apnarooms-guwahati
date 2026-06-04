@@ -429,7 +429,7 @@ export default function HomePage() {
     <main className="tenant-site">
       <nav className="navbar-lux">
         <a className="navbar-brand-lux" href="#">
-          <img src="/brand/apnarooms-logo.jpeg" alt="ApnaRooms.com" />
+          <img src="/brand/apnarooms-logo.png" alt="ApnaRooms.com" />
         </a>
         <button
           type="button"
