@@ -33,6 +33,11 @@ function priceSuffix(property: Pick<BackendProperty, "category">) {
   return property.category === "HOMESTAY" ? "/day" : "/mo";
 }
 
+function optionalText(value: string) {
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : undefined;
+}
+
 function propertyToOwnerForm(property: BackendProperty) {
   return {
     ownerName: property.ownerName ?? property.landlord?.name ?? "",
@@ -160,18 +165,18 @@ export default function TenantDashboardPage() {
 
     try {
       const payload = {
-        ownerName: ownerForm.ownerName,
-        ownerPhone: ownerForm.ownerPhone,
-        ownerEmail: ownerForm.ownerEmail,
-        title: ownerForm.title,
-        description: ownerForm.description || undefined,
+        ownerName: optionalText(ownerForm.ownerName),
+        ownerPhone: optionalText(ownerForm.ownerPhone),
+        ownerEmail: optionalText(ownerForm.ownerEmail),
+        title: ownerForm.title.trim(),
+        description: optionalText(ownerForm.description),
         category: ownerForm.category,
         rentMonthly: Number(ownerForm.rentMonthly),
         depositAmount: ownerForm.depositAmount ? Number(ownerForm.depositAmount) : undefined,
         tokenAmount: Number(ownerForm.tokenAmount),
-        locality: ownerForm.locality,
-        city: ownerForm.city,
-        address: ownerForm.address || undefined,
+        locality: ownerForm.locality.trim(),
+        city: ownerForm.city.trim(),
+        address: optionalText(ownerForm.address),
         isAvailable: ownerForm.isAvailable,
         amenities: ownerForm.amenities.split(",").map((item) => item.trim()).filter(Boolean),
         images: typedImages

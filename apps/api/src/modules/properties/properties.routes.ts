@@ -22,21 +22,28 @@ import {
 
 export const propertiesRoutes = Router();
 
+const optionalTrimmedString = (schema: z.ZodString) =>
+  z.preprocess((value) => {
+    if (typeof value !== "string") return value;
+    const trimmed = value.trim();
+    return trimmed.length ? trimmed : undefined;
+  }, schema.optional());
+
 const propertySchema = z.object({
-  title: z.string().min(3),
-  slug: z.string().min(3).optional(),
-  description: z.string().optional(),
+  title: z.string().trim().min(3),
+  slug: optionalTrimmedString(z.string().min(3)),
+  description: optionalTrimmedString(z.string()),
   category: z.enum(["PG", "HOMESTAY", "FLAT", "ROOM"]),
   status: z.enum(["DRAFT", "PUBLISHED", "UNPUBLISHED", "ARCHIVED"]).optional(),
   rentMonthly: z.coerce.number().int().positive(),
   depositAmount: z.coerce.number().int().nonnegative().optional(),
   tokenAmount: z.coerce.number().int().positive(),
-  locality: z.string().min(2),
-  city: z.string().min(2).default("Guwahati"),
-  address: z.string().optional(),
-  ownerName: z.string().min(1).optional(),
-  ownerPhone: z.string().min(6).optional(),
-  ownerEmail: z.string().email().optional(),
+  locality: z.string().trim().min(2),
+  city: z.string().trim().min(2).default("Guwahati"),
+  address: optionalTrimmedString(z.string()),
+  ownerName: optionalTrimmedString(z.string().min(1)),
+  ownerPhone: optionalTrimmedString(z.string().min(6)),
+  ownerEmail: optionalTrimmedString(z.string().email()),
   latitude: z.coerce.number().optional(),
   longitude: z.coerce.number().optional(),
   isVerified: z.boolean().optional(),
