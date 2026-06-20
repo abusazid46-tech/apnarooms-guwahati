@@ -29,6 +29,31 @@ const optionalTrimmedString = (schema: z.ZodString) =>
     return trimmed.length ? trimmed : undefined;
   }, schema.optional());
 
+const isHttpUrl = (value: unknown) => {
+  if (typeof value !== "string") return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
+
+const propertyImageSchema = z.object({
+  url: z.string().url(),
+  path: z.string().optional(),
+  alt: z.string().optional(),
+  sortOrder: z.coerce.number().int().nonnegative().optional()
+});
+
+const propertyImagesSchema = z.preprocess((value) => {
+  if (!Array.isArray(value)) return value;
+  return value.filter((image) => {
+    if (!image || typeof image !== "object" || !("url" in image)) return false;
+    return isHttpUrl((image as { url?: unknown }).url);
+  });
+}, z.array(propertyImageSchema).optional());
+
 const propertySchema = z.object({
   title: z.string().trim().min(3),
   slug: optionalTrimmedString(z.string().min(3)),
@@ -50,25 +75,11 @@ const propertySchema = z.object({
   isAvailable: z.boolean().optional(),
   amenities: z.array(z.string().min(1)).optional(),
   landlordId: z.string().optional(),
-  images: z
-    .array(
-      z.object({
-        url: z.string().url(),
-        path: z.string().optional(),
-        alt: z.string().optional(),
-        sortOrder: z.coerce.number().int().nonnegative().optional()
-      })
-    )
-    .optional()
+  images: propertyImagesSchema
 });
 
 const propertyUpdateSchema = propertySchema.partial();
-const imageSchema = z.object({
-  url: z.string().url(),
-  path: z.string().optional(),
-  alt: z.string().optional(),
-  sortOrder: z.coerce.number().int().nonnegative().optional()
-});
+const imageSchema = propertyImageSchema;
 
 propertiesRoutes.get("/", async (req, res) => {
   const result = await listProperties(req.query);

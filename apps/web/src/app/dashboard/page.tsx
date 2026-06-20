@@ -42,6 +42,15 @@ function isPositiveNumber(value: string) {
   return Number.isFinite(Number(value)) && Number(value) > 0;
 }
 
+function isHttpUrl(value: string) {
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function propertyToOwnerForm(property: BackendProperty) {
   return {
     ownerName: property.ownerName ?? property.landlord?.name ?? "",
@@ -206,6 +215,7 @@ export default function TenantDashboardPage() {
       .split("\n")
       .map((url) => url.trim())
       .filter(Boolean)
+      .filter(isHttpUrl)
       .map((url, index) => ({ url, sortOrder: index, alt: ownerForm.title }));
 
     try {
