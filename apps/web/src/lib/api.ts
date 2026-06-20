@@ -5,7 +5,8 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://apnarooms-
 export class ApiError extends Error {
   constructor(
     message: string,
-    public status: number
+    public status: number,
+    public issues: { path: string; message: string }[] = []
   ) {
     super(message);
   }
@@ -39,7 +40,13 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
   const body = text ? JSON.parse(text) : null;
 
   if (!response.ok) {
-    throw new ApiError(body?.message ?? `API request failed: ${response.status}`, response.status);
+    const issues = Array.isArray(body?.issues) ? body.issues : [];
+    const issueText = issues
+      .map((issue: { path?: string; message?: string }) => [issue.path, issue.message].filter(Boolean).join(": "))
+      .filter(Boolean)
+      .join(", ");
+    const message = issueText || body?.message || `API request failed: ${response.status}`;
+    throw new ApiError(message, response.status, issues);
   }
 
   return body as T;

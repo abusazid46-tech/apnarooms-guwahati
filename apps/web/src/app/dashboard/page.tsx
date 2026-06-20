@@ -38,6 +38,10 @@ function optionalText(value: string) {
   return trimmed.length ? trimmed : undefined;
 }
 
+function isPositiveNumber(value: string) {
+  return Number.isFinite(Number(value)) && Number(value) > 0;
+}
+
 function propertyToOwnerForm(property: BackendProperty) {
   return {
     ownerName: property.ownerName ?? property.landlord?.name ?? "",
@@ -154,6 +158,47 @@ export default function TenantDashboardPage() {
   async function saveOwnerProperty(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!user) return;
+
+    const ownerName = optionalText(ownerForm.ownerName);
+    const ownerPhone = optionalText(ownerForm.ownerPhone);
+    const ownerEmail = optionalText(ownerForm.ownerEmail);
+    const title = ownerForm.title.trim();
+    const locality = ownerForm.locality.trim();
+    const city = ownerForm.city.trim();
+
+    if (!ownerName) {
+      setOwnerMessage("Owner name is required.");
+      return;
+    }
+    if (!ownerPhone || ownerPhone.length < 6) {
+      setOwnerMessage("Enter a valid owner contact number.");
+      return;
+    }
+    if (!ownerEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(ownerEmail)) {
+      setOwnerMessage("Enter a valid owner email ID.");
+      return;
+    }
+    if (title.length < 3) {
+      setOwnerMessage("Property title must be at least 3 characters.");
+      return;
+    }
+    if (!isPositiveNumber(ownerForm.rentMonthly)) {
+      setOwnerMessage(ownerForm.category === "HOMESTAY" ? "Enter a valid daily rate." : "Enter a valid monthly rent.");
+      return;
+    }
+    if (!isPositiveNumber(ownerForm.tokenAmount)) {
+      setOwnerMessage("Enter a valid token amount.");
+      return;
+    }
+    if (locality.length < 2) {
+      setOwnerMessage("Locality is required.");
+      return;
+    }
+    if (city.length < 2) {
+      setOwnerMessage("City is required.");
+      return;
+    }
+
     setOwnerSaving(true);
     setOwnerMessage(editingPropertyId ? "Updating owner listing..." : "Submitting owner listing for approval...");
 
@@ -165,17 +210,17 @@ export default function TenantDashboardPage() {
 
     try {
       const payload = {
-        ownerName: optionalText(ownerForm.ownerName),
-        ownerPhone: optionalText(ownerForm.ownerPhone),
-        ownerEmail: optionalText(ownerForm.ownerEmail),
-        title: ownerForm.title.trim(),
+        ownerName,
+        ownerPhone,
+        ownerEmail,
+        title,
         description: optionalText(ownerForm.description),
         category: ownerForm.category,
         rentMonthly: Number(ownerForm.rentMonthly),
         depositAmount: ownerForm.depositAmount ? Number(ownerForm.depositAmount) : undefined,
         tokenAmount: Number(ownerForm.tokenAmount),
-        locality: ownerForm.locality.trim(),
-        city: ownerForm.city.trim(),
+        locality,
+        city,
         address: optionalText(ownerForm.address),
         isAvailable: ownerForm.isAvailable,
         amenities: ownerForm.amenities.split(",").map((item) => item.trim()).filter(Boolean),
@@ -304,11 +349,11 @@ export default function TenantDashboardPage() {
               <option value="FLAT">Flat</option>
               <option value="ROOM">Room</option>
             </select>
-            <input value={ownerForm.rentMonthly} onChange={(e) => setOwnerForm({ ...ownerForm, rentMonthly: e.target.value })} inputMode="numeric" placeholder={ownerForm.category === "HOMESTAY" ? "Daily rate" : "Monthly rent"} />
+            <input value={ownerForm.rentMonthly} onChange={(e) => setOwnerForm({ ...ownerForm, rentMonthly: e.target.value })} inputMode="numeric" placeholder={ownerForm.category === "HOMESTAY" ? "Daily rate" : "Monthly rent"} required />
             <input value={ownerForm.depositAmount} onChange={(e) => setOwnerForm({ ...ownerForm, depositAmount: e.target.value })} inputMode="numeric" placeholder="Deposit amount" />
-            <input value={ownerForm.tokenAmount} onChange={(e) => setOwnerForm({ ...ownerForm, tokenAmount: e.target.value })} inputMode="numeric" placeholder="Token amount" />
-            <input value={ownerForm.locality} onChange={(e) => setOwnerForm({ ...ownerForm, locality: e.target.value })} placeholder="Locality" />
-            <input value={ownerForm.city} onChange={(e) => setOwnerForm({ ...ownerForm, city: e.target.value })} placeholder="City" />
+            <input value={ownerForm.tokenAmount} onChange={(e) => setOwnerForm({ ...ownerForm, tokenAmount: e.target.value })} inputMode="numeric" placeholder="Token amount" required />
+            <input value={ownerForm.locality} onChange={(e) => setOwnerForm({ ...ownerForm, locality: e.target.value })} placeholder="Locality" required />
+            <input value={ownerForm.city} onChange={(e) => setOwnerForm({ ...ownerForm, city: e.target.value })} placeholder="City" required />
             <input value={ownerForm.address} onChange={(e) => setOwnerForm({ ...ownerForm, address: e.target.value })} placeholder="Full address" />
             <input value={ownerForm.amenities} onChange={(e) => setOwnerForm({ ...ownerForm, amenities: e.target.value })} placeholder="Amenities comma separated" />
             <label><input type="checkbox" checked={ownerForm.isAvailable} onChange={(e) => setOwnerForm({ ...ownerForm, isAvailable: e.target.checked })} /> Available now</label>
