@@ -29,10 +29,14 @@ export type BackendProperty = {
   locality: string;
   city: string;
   address?: string | null;
+  ownerName?: string | null;
+  ownerPhone?: string | null;
+  ownerEmail?: string | null;
   isVerified: boolean;
   isAvailable: boolean;
   amenities: string[];
   images: BackendImage[];
+  landlord?: Pick<BackendUser, "id" | "name" | "phone" | "email"> | null;
   createdAt: string;
 };
 

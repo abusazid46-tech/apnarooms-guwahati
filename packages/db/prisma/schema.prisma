@@ -89,6 +89,9 @@ model Property {
   locality       String
   city           String           @default("Guwahati")
   address        String?
+  ownerName      String?
+  ownerPhone     String?
+  ownerEmail     String?
   latitude       Decimal?
   longitude      Decimal?
   isVerified     Boolean          @default(false)

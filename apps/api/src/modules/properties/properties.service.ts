@@ -14,6 +14,9 @@ type PropertyInput = {
   locality: string;
   city?: string;
   address?: string;
+  ownerName?: string;
+  ownerPhone?: string;
+  ownerEmail?: string;
   latitude?: number;
   longitude?: number;
   isVerified?: boolean;
@@ -208,6 +211,9 @@ export async function createProperty(input: PropertyInput) {
       locality: input.locality,
       city: input.city ?? "Guwahati",
       address: input.address,
+      ownerName: input.ownerName,
+      ownerPhone: input.ownerPhone,
+      ownerEmail: input.ownerEmail,
       latitude: input.latitude,
       longitude: input.longitude,
       isVerified: input.isVerified ?? false,
@@ -250,7 +256,7 @@ export async function createOwnerProperty(firebaseUid: string, input: PropertyIn
   await createAdminNotification({
     type: "OWNER_PROPERTY_SUBMITTED",
     title: "New owner listing needs approval",
-    body: `${user.name ?? user.email ?? user.phone ?? "A property owner"} submitted ${property.title} in ${property.locality}.`,
+    body: `${property.ownerName ?? user.name ?? user.email ?? user.phone ?? "A property owner"} submitted ${property.title} in ${property.locality}. Contact: ${property.ownerPhone ?? property.ownerEmail ?? "not provided"}.`,
     href: "/admin/properties"
   });
 
@@ -279,6 +285,9 @@ export async function updateProperty(id: string, input: Partial<PropertyInput>) 
         locality: input.locality,
         city: input.city,
         address: input.address,
+        ownerName: input.ownerName,
+        ownerPhone: input.ownerPhone,
+        ownerEmail: input.ownerEmail,
         latitude: input.latitude,
         longitude: input.longitude,
         isVerified: input.isVerified,
@@ -314,7 +323,7 @@ export async function updateOwnerProperty(firebaseUid: string, id: string, input
   await createAdminNotification({
     type: "OWNER_PROPERTY_UPDATED",
     title: "Owner listing edited",
-    body: `${property.landlord?.name ?? property.landlord?.email ?? "A property owner"} edited ${existing.title}. Review before publishing.`,
+    body: `${property.ownerName ?? property.landlord?.name ?? property.landlord?.email ?? "A property owner"} edited ${existing.title}. Review before publishing.`,
     href: "/admin/properties"
   });
 

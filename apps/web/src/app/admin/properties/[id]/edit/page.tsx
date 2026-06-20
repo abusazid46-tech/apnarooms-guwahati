@@ -15,6 +15,9 @@ type UploadDiagnostic = {
 };
 
 const initialForm = {
+  ownerName: "",
+  ownerPhone: "",
+  ownerEmail: "",
   title: "",
   description: "",
   category: "PG",
@@ -33,6 +36,9 @@ const initialForm = {
 
 function propertyToForm(property: BackendProperty) {
   return {
+    ownerName: property.ownerName ?? property.landlord?.name ?? "",
+    ownerPhone: property.ownerPhone ?? property.landlord?.phone ?? "",
+    ownerEmail: property.ownerEmail ?? property.landlord?.email ?? "",
     title: property.title,
     description: property.description ?? "",
     category: property.category,
@@ -155,6 +161,9 @@ export default function EditPropertyPage() {
       const result = await apiPatch<{ property: BackendProperty }>(
         `/properties/${property.id}`,
         {
+          ownerName: form.ownerName || undefined,
+          ownerPhone: form.ownerPhone || undefined,
+          ownerEmail: form.ownerEmail || undefined,
           title: form.title,
           description: form.description || undefined,
           category: form.category,
@@ -209,6 +218,9 @@ export default function EditPropertyPage() {
         <section className="admin-panel">
           <div className="admin-panel-head"><h2>{property?.title ?? "Loading property"}</h2><span>{message}</span></div>
           <form className="admin-form" onSubmit={saveProperty}>
+            <input value={form.ownerName} onChange={(e) => setForm({ ...form, ownerName: e.target.value })} placeholder="Owner name" />
+            <input value={form.ownerPhone} onChange={(e) => setForm({ ...form, ownerPhone: e.target.value })} placeholder="Owner contact number" inputMode="tel" />
+            <input value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} placeholder="Owner email ID" type="email" />
             <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Property title" required />
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short listing description" />
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>

@@ -14,6 +14,9 @@ type UploadDiagnostic = {
 };
 
 const initialForm = {
+  ownerName: "",
+  ownerPhone: "",
+  ownerEmail: "",
   title: "",
   description: "",
   category: "PG",
@@ -109,6 +112,9 @@ export default function AdminPropertiesPage() {
       const result = await apiPost<{ property: BackendProperty }>(
         "/properties",
         {
+          ownerName: form.ownerName || undefined,
+          ownerPhone: form.ownerPhone || undefined,
+          ownerEmail: form.ownerEmail || undefined,
           title: form.title,
           description: form.description || undefined,
           category: form.category,
@@ -188,6 +194,9 @@ export default function AdminPropertiesPage() {
         <section className="admin-panel">
           <div className="admin-panel-head"><h2>Create Property</h2><span>{message}</span></div>
           <form className="admin-form" onSubmit={createProperty}>
+            <input value={form.ownerName} onChange={(e) => setForm({ ...form, ownerName: e.target.value })} placeholder="Owner name" />
+            <input value={form.ownerPhone} onChange={(e) => setForm({ ...form, ownerPhone: e.target.value })} placeholder="Owner contact number" inputMode="tel" />
+            <input value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} placeholder="Owner email ID" type="email" />
             <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Property title" required />
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short listing description" />
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
@@ -245,6 +254,13 @@ export default function AdminPropertiesPage() {
                 <div>
                   <h3>{property.title}</h3>
                   <p>{property.locality} | INR {property.rentMonthly.toLocaleString("en-IN")}{property.category === "HOMESTAY" ? "/day" : "/mo"} | {property.status}</p>
+                  {(property.ownerName || property.ownerPhone || property.ownerEmail || property.landlord) ? (
+                    <p>
+                      Owner: {property.ownerName ?? property.landlord?.name ?? "Not provided"}
+                      {property.ownerPhone ?? property.landlord?.phone ? ` | ${property.ownerPhone ?? property.landlord?.phone}` : ""}
+                      {property.ownerEmail ?? property.landlord?.email ? ` | ${property.ownerEmail ?? property.landlord?.email}` : ""}
+                    </p>
+                  ) : null}
                   <div className="admin-actions">
                     <a className="admin-inline-link" href={`/admin/properties/${property.id}/edit`}>Edit</a>
                     <button type="button" onClick={() => updateStatus(property, "PUBLISHED")}>Publish</button>

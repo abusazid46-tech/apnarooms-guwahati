@@ -8,6 +8,9 @@ import { useAuth } from "@/hooks/useAuth";
 import type { BackendBooking, BackendProperty } from "@/types/api";
 
 const initialOwnerForm = {
+  ownerName: "",
+  ownerPhone: "",
+  ownerEmail: "",
   title: "",
   description: "",
   category: "PG",
@@ -32,6 +35,9 @@ function priceSuffix(property: Pick<BackendProperty, "category">) {
 
 function propertyToOwnerForm(property: BackendProperty) {
   return {
+    ownerName: property.ownerName ?? property.landlord?.name ?? "",
+    ownerPhone: property.ownerPhone ?? property.landlord?.phone ?? "",
+    ownerEmail: property.ownerEmail ?? property.landlord?.email ?? "",
     title: property.title,
     description: property.description ?? "",
     category: property.category,
@@ -97,6 +103,16 @@ export default function TenantDashboardPage() {
     loadOwnerProperties().catch(() => {});
   }, [showOwnerTools, user]);
 
+  useEffect(() => {
+    if (!user || !showOwnerTools || editingPropertyId) return;
+    setOwnerForm((current) => ({
+      ...current,
+      ownerName: current.ownerName || profile?.name || user.displayName || "",
+      ownerPhone: current.ownerPhone || profile?.phone || user.phoneNumber || "",
+      ownerEmail: current.ownerEmail || profile?.email || user.email || ""
+    }));
+  }, [editingPropertyId, profile, showOwnerTools, user]);
+
   const stats = useMemo(() => {
     const confirmed = bookings.filter((booking) => booking.status === "CONFIRMED").length;
     const pending = bookings.filter((booking) => booking.status === "PENDING_PAYMENT").length;
@@ -121,7 +137,12 @@ export default function TenantDashboardPage() {
 
   function resetOwnerForm() {
     setEditingPropertyId(null);
-    setOwnerForm(initialOwnerForm);
+    setOwnerForm({
+      ...initialOwnerForm,
+      ownerName: profile?.name ?? "",
+      ownerPhone: profile?.phone ?? user?.phoneNumber ?? "",
+      ownerEmail: profile?.email ?? user?.email ?? ""
+    });
     setOwnerImages([]);
   }
 
@@ -139,6 +160,9 @@ export default function TenantDashboardPage() {
 
     try {
       const payload = {
+        ownerName: ownerForm.ownerName,
+        ownerPhone: ownerForm.ownerPhone,
+        ownerEmail: ownerForm.ownerEmail,
         title: ownerForm.title,
         description: ownerForm.description || undefined,
         category: ownerForm.category,
@@ -264,6 +288,9 @@ export default function TenantDashboardPage() {
           </div>
 
           <form className="admin-form owner-property-form" onSubmit={saveOwnerProperty}>
+            <input value={ownerForm.ownerName} onChange={(e) => setOwnerForm({ ...ownerForm, ownerName: e.target.value })} placeholder="Owner name" required />
+            <input value={ownerForm.ownerPhone} onChange={(e) => setOwnerForm({ ...ownerForm, ownerPhone: e.target.value })} placeholder="Contact number" inputMode="tel" required />
+            <input value={ownerForm.ownerEmail} onChange={(e) => setOwnerForm({ ...ownerForm, ownerEmail: e.target.value })} placeholder="Email ID" type="email" required />
             <input value={ownerForm.title} onChange={(e) => setOwnerForm({ ...ownerForm, title: e.target.value })} placeholder="Property title" required />
             <textarea value={ownerForm.description} onChange={(e) => setOwnerForm({ ...ownerForm, description: e.target.value })} placeholder="Short listing description" />
             <select value={ownerForm.category} onChange={(e) => setOwnerForm({ ...ownerForm, category: e.target.value })}>
