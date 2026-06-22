@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "dev": "tsx watch src/server.ts",
-    "build": "tsc",
+    "build": "node scripts/sync-db-if-possible.mjs && tsc",
     "start": "node dist/server.js",
     "lint": "echo \"Add ESLint config\"",
     "typecheck": "tsc --noEmit"
