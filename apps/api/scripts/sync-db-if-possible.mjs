@@ -5,11 +5,20 @@ if (!process.env.DATABASE_URL) {
   process.exit(0);
 }
 
-console.log("DATABASE_URL found; syncing Prisma schema to database.");
+const acceptDataLoss = process.env.PRISMA_ACCEPT_DATA_LOSS === "true";
+const prismaArgs = ["--filter", "@apnarooms/db", "prisma:push"];
+
+if (acceptDataLoss) {
+  prismaArgs.push("--", "--accept-data-loss");
+}
+
+console.log(
+  `DATABASE_URL found; syncing Prisma schema to database${acceptDataLoss ? " with --accept-data-loss" : ""}.`
+);
 
 const result = spawnSync(
   "pnpm",
-  ["--filter", "@apnarooms/db", "prisma:push"],
+  prismaArgs,
   {
     stdio: "inherit",
     shell: process.platform === "win32"
