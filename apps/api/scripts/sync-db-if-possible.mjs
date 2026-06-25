@@ -5,11 +5,13 @@ if (!process.env.DATABASE_URL) {
   process.exit(0);
 }
 
-const acceptDataLoss = process.env.PRISMA_ACCEPT_DATA_LOSS === "true";
-const prismaArgs = ["--filter", "@apnarooms/db", "prisma:push"];
+const acceptDataLoss = ["true", "1", "yes"].includes(
+  String(process.env.PRISMA_ACCEPT_DATA_LOSS ?? "").toLowerCase()
+);
+const prismaArgs = ["--filter", "@apnarooms/db", "exec", "prisma", "db", "push"];
 
 if (acceptDataLoss) {
-  prismaArgs.push("--", "--accept-data-loss");
+  prismaArgs.push("--accept-data-loss");
 }
 
 console.log(
