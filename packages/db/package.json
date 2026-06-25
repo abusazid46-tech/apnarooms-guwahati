@@ -14,7 +14,7 @@
     "build": "prisma generate && tsc",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:push": "prisma db push",
+    "prisma:push": "node scripts/prisma-push.mjs",
     "prisma:seed": "tsx prisma/seed.ts",
     "prisma:promote-admin": "tsx src/scripts/promote-admin.ts",
     "prisma:seed-launch": "tsx src/scripts/seed-launch-properties.ts",
