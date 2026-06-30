@@ -1,6 +1,6 @@
 import type { User } from "firebase/auth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://apnarooms-guwahati.onrender.com/api";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://apnarooms-guwahati-3lm4.onrender.com/api";
 
 export class ApiError extends Error {
   constructor(

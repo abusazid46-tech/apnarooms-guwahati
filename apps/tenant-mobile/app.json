@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "ApnaRooms Tenant",
+    "slug": "apnarooms-tenant",
+    "scheme": "apnaroomstenant",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/brand/apnarooms-icon.jpeg",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/brand/apnarooms-logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#5B55B7"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.apnarooms.tenant",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/brand/apnarooms-icon.jpeg",
+        "backgroundColor": "#5B55B7"
+      },
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiBaseUrl": "https://apnarooms-guwahati-3lm4.onrender.com/api"
+    }
+  }
+}

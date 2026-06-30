@@ -1,4 +1,4 @@
-const defaultApiBaseUrl = "https://apnarooms-guwahati.onrender.com/api";
+const defaultApiBaseUrl = "https://apnarooms-guwahati-3lm4.onrender.com/api";
 
 function getBackendHealthUrl() {
   if (process.env.BACKEND_HEALTH_URL) {

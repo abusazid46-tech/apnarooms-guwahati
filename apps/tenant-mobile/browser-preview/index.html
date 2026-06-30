@@ -1,0 +1,450 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ApnaRooms Tenant Preview</title>
+    <style>
+      :root {
+        --primary: #5b55b7;
+        --primary-dark: #3f3a97;
+        --red: #e50914;
+        --accent: #ffb547;
+        --ink: #111827;
+        --muted: #6b7280;
+        --bg: #f7f6ff;
+        --surface: #ffffff;
+        --success: #12805c;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+      .app {
+        max-width: 520px;
+        min-height: 100vh;
+        margin: 0 auto;
+        background: var(--bg);
+        box-shadow: 0 18px 60px rgba(17, 24, 39, .18);
+      }
+      .hero {
+        border-bottom-left-radius: 34px;
+        border-bottom-right-radius: 34px;
+        padding: 18px 22px 30px;
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: white;
+      }
+      .top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .brand {
+        height: 42px;
+        width: 160px;
+        object-fit: contain;
+      }
+      .bell {
+        display: grid;
+        place-items: center;
+        width: 48px;
+        height: 48px;
+        border: 0;
+        border-radius: 50%;
+        background: white;
+        color: var(--primary);
+        font-size: 22px;
+      }
+      .welcome {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        margin-top: 22px;
+      }
+      .avatar {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        border-radius: 50%;
+        background: white;
+        color: var(--primary);
+        font-weight: 900;
+      }
+      h1 {
+        margin: 0;
+        font-size: 24px;
+        line-height: 1.1;
+      }
+      .sub {
+        margin-top: 3px;
+        color: rgba(255,255,255,.86);
+        font-weight: 700;
+      }
+      .search {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-top: 22px;
+        border-radius: 18px;
+        padding: 0 16px;
+        background: white;
+      }
+      .search input {
+        width: 100%;
+        height: 56px;
+        border: 0;
+        outline: 0;
+        color: var(--ink);
+        font-size: 16px;
+        font-weight: 700;
+      }
+      .content {
+        padding: 20px;
+      }
+      .section-head {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 16px;
+        margin: 22px 0 16px;
+      }
+      .eyebrow {
+        color: var(--primary);
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .6px;
+        text-transform: uppercase;
+      }
+      h2 {
+        margin: 4px 0 0;
+        font-size: 22px;
+      }
+      .categories {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 12px;
+      }
+      .cat {
+        min-height: 104px;
+        border: 0;
+        border-radius: 22px;
+        background: white;
+        box-shadow: 0 14px 24px rgba(17,24,39,.10);
+        color: var(--ink);
+        font-weight: 900;
+      }
+      .cat.active {
+        background: #fff4f5;
+        color: var(--red);
+      }
+      .cat span {
+        display: grid;
+        place-items: center;
+        width: 58px;
+        height: 58px;
+        margin: 0 auto 8px;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        font-size: 25px;
+      }
+      .cat.active span { background: var(--red); }
+      .owner-card {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin: 20px 0 8px;
+        border-radius: 24px;
+        padding: 16px;
+        background: #fff7e8;
+        box-shadow: 0 14px 24px rgba(17,24,39,.10);
+      }
+      .owner-card .icon {
+        display: grid;
+        place-items: center;
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        background: var(--red);
+        color: white;
+        font-size: 24px;
+      }
+      .owner-card strong { display: block; }
+      .owner-card p {
+        margin: 3px 0 0;
+        color: var(--muted);
+        font-size: 12px;
+        line-height: 1.4;
+      }
+      .owner-card a {
+        margin-left: auto;
+        border-radius: 999px;
+        padding: 10px 14px;
+        background: var(--primary);
+        color: white;
+        font-size: 13px;
+        font-weight: 900;
+        text-decoration: none;
+      }
+      .cards {
+        display: grid;
+        gap: 18px;
+      }
+      .card {
+        overflow: hidden;
+        border-radius: 24px;
+        background: white;
+        box-shadow: 0 14px 24px rgba(17,24,39,.12);
+      }
+      .image-wrap {
+        position: relative;
+        height: 190px;
+        background: #eef2ff;
+      }
+      .image-wrap img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      .placeholder {
+        display: grid;
+        place-items: center;
+        height: 100%;
+        color: var(--primary);
+        font-weight: 900;
+      }
+      .badge-row {
+        position: absolute;
+        top: 12px;
+        left: 12px;
+        right: 12px;
+        display: flex;
+        gap: 8px;
+      }
+      .badge {
+        border-radius: 999px;
+        padding: 6px 10px;
+        color: white;
+        font-size: 11px;
+        font-weight: 900;
+        background: var(--primary);
+      }
+      .badge.available { background: var(--success); }
+      .card-body {
+        padding: 16px;
+      }
+      .title {
+        font-size: 17px;
+        font-weight: 900;
+        line-height: 1.3;
+      }
+      .meta {
+        margin-top: 8px;
+        color: var(--muted);
+        font-weight: 700;
+      }
+      .amenities {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 12px;
+      }
+      .amenity {
+        border-radius: 999px;
+        padding: 5px 9px;
+        background: #f1f5f9;
+        color: #1f2937;
+        font-size: 11px;
+        font-weight: 800;
+      }
+      .footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 14px;
+      }
+      .price {
+        color: var(--red);
+        font-size: 17px;
+        font-weight: 900;
+      }
+      .wa {
+        display: grid;
+        place-items: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #21a67a;
+        color: white;
+        text-decoration: none;
+        font-size: 20px;
+      }
+      .state {
+        border-radius: 22px;
+        padding: 28px;
+        background: white;
+        color: var(--muted);
+        text-align: center;
+        font-weight: 800;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="app">
+      <section class="hero">
+        <div class="top">
+          <img class="brand" alt="ApnaRooms" src="/brand-logo" onerror="this.style.display='none';document.querySelector('.brandText').style.display='block'" />
+          <strong class="brandText" style="display:none;font-size:22px">APNAROOMS</strong>
+          <button class="bell">⌕</button>
+        </div>
+        <div class="welcome">
+          <div class="avatar">A</div>
+          <div>
+            <h1>Welcome</h1>
+            <div class="sub">Find your next stay</div>
+          </div>
+        </div>
+        <label class="search">
+          <input id="search" placeholder="Search locality, PG, room..." />
+          <span>⌕</span>
+        </label>
+      </section>
+
+      <section class="content">
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Category</div>
+            <h2>Choose your stay type</h2>
+          </div>
+        </div>
+        <div class="categories" id="categories"></div>
+
+        <div class="owner-card">
+          <div class="icon">+</div>
+          <div>
+            <strong>List your property</strong>
+            <p>Owners can add PGs, rooms and homestays for admin approval.</p>
+          </div>
+          <a href="https://www.apnarooms.com/dashboard?owner=1" target="_blank">Start</a>
+        </div>
+
+        <div class="section-head">
+          <div>
+            <div class="eyebrow">Live properties</div>
+            <h2>Recommended</h2>
+          </div>
+        </div>
+        <div id="state" class="state">Loading live properties...</div>
+        <div id="cards" class="cards"></div>
+      </section>
+    </main>
+
+    <script>
+      const categoryData = [
+        ["all", "All", "⌂"],
+        ["PG", "PG", "▦"],
+        ["HOMESTAY", "Homestay", "⌂"],
+        ["FLAT", "Flat", "▥"],
+        ["ROOM", "Room", "▣"]
+      ];
+      let properties = [];
+      let activeCategory = "all";
+      let query = "";
+
+      const categories = document.getElementById("categories");
+      const cards = document.getElementById("cards");
+      const state = document.getElementById("state");
+      const search = document.getElementById("search");
+
+      function money(value) {
+        return `INR ${Number(value || 0).toLocaleString("en-IN")}`;
+      }
+
+      function whatsapp(property) {
+        const text = [
+          "Hi ApnaRooms, I want to book this property.",
+          `Property: ${property.title}`,
+          `Locality: ${property.locality}`,
+          `Price: ${money(property.rentMonthly)}`,
+          `Token: ${money(property.tokenAmount)}`,
+          `Link: https://www.apnarooms.com/properties/${property.id}`
+        ].join("\\n");
+        return `https://wa.me/918133983732?text=${encodeURIComponent(text)}`;
+      }
+
+      function renderCategories() {
+        categories.innerHTML = categoryData.map(([key, label, icon]) => `
+          <button class="cat ${key === activeCategory ? "active" : ""}" data-key="${key}">
+            <span>${icon}</span>${label}
+          </button>
+        `).join("");
+        categories.querySelectorAll("button").forEach((button) => {
+          button.addEventListener("click", () => {
+            activeCategory = button.dataset.key;
+            render();
+          });
+        });
+      }
+
+      function render() {
+        renderCategories();
+        const normalized = query.trim().toLowerCase();
+        const filtered = properties.filter((property) => {
+          const categoryMatch = activeCategory === "all" || property.category === activeCategory;
+          const text = [property.title, property.locality, property.city, property.address, ...(property.amenities || [])].join(" ").toLowerCase();
+          return categoryMatch && (!normalized || text.includes(normalized));
+        });
+
+        state.style.display = filtered.length ? "none" : "block";
+        state.textContent = properties.length ? "No matching stays found." : "No live properties available.";
+        cards.innerHTML = filtered.map((property) => {
+          const image = property.images && property.images[0] && property.images[0].url;
+          const period = property.category === "HOMESTAY" ? "/day" : "/mo";
+          return `
+            <article class="card">
+              <div class="image-wrap">
+                ${image ? `<img src="${image}" alt="${property.title}">` : `<div class="placeholder">Photos pending</div>`}
+                <div class="badge-row">
+                  <span class="badge available">${property.isAvailable ? "Available" : "Reserved"}</span>
+                  ${property.isVerified ? `<span class="badge">Verified</span>` : ""}
+                </div>
+              </div>
+              <div class="card-body">
+                <div class="title">${property.title}</div>
+                <div class="meta">⌖ ${property.locality}, ${property.city}</div>
+                <div class="amenities">${(property.amenities || []).slice(0, 3).map((item) => `<span class="amenity">${item}</span>`).join("")}</div>
+                <div class="footer">
+                  <div class="price">${money(property.rentMonthly)}${period}</div>
+                  <a class="wa" target="_blank" href="${whatsapp(property)}">☏</a>
+                </div>
+              </div>
+            </article>
+          `;
+        }).join("");
+      }
+
+      search.addEventListener("input", (event) => {
+        query = event.target.value;
+        render();
+      });
+
+      fetch("/api/properties?limit=100")
+        .then((response) => response.json())
+        .then((data) => {
+          properties = data.properties || [];
+          render();
+        })
+        .catch((error) => {
+          state.style.display = "block";
+          state.textContent = error.message || "Unable to load properties.";
+        });
+
+      renderCategories();
+    </script>
+  </body>
+</html>
