@@ -4,7 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = dirname(fileURLToPath(import.meta.url));
-const apiBase = process.env.APNA_API_BASE ?? "https://apnarooms-guwahati-3lm4.onrender.com/api";
+const apiBase = process.env.APNA_API_BASE ?? "https://darkred-coyote-647666.hostingersite.com/api";
 const port = Number(process.env.PORT ?? 8081);
 
 async function proxyJson(path, res) {

@@ -1,4 +1,4 @@
-const defaultApiBaseUrl = "https://apnarooms-guwahati-3lm4.onrender.com/api";
+const defaultApiBaseUrl = "https://darkred-coyote-647666.hostingersite.com/api";
 
 function getBackendHealthUrl() {
   if (process.env.BACKEND_HEALTH_URL) {

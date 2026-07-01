@@ -25,7 +25,7 @@ Save changes and redeploy the service.
 Open Vercel, select the frontend project, then set:
 
 ```env
-NEXT_PUBLIC_API_BASE_URL=https://apnarooms-guwahati-3lm4.onrender.com/api
+NEXT_PUBLIC_API_BASE_URL=https://darkred-coyote-647666.hostingersite.com/api
 ```
 
 Redeploy the frontend after changing this environment variable.
@@ -123,7 +123,7 @@ Open Razorpay Dashboard in test mode, then go to **Account & Settings** -> **Web
 Add endpoint:
 
 ```text
-https://apnarooms-guwahati-3lm4.onrender.com/api/payments/webhook
+https://darkred-coyote-647666.hostingersite.com/api/payments/webhook
 ```
 
 Select these events:
