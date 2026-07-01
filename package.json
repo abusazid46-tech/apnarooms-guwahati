@@ -10,8 +10,8 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
-    "hostinger:build": "pnpm --filter @apnarooms/shared build && pnpm --filter @apnarooms/db build && pnpm --filter @apnarooms/api build",
-    "hostinger:start": "pnpm --filter @apnarooms/api start",
+    "hostinger:build": "node scripts/hostinger-build.mjs",
+    "hostinger:start": "node server.js",
     "start": "node server.js",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
