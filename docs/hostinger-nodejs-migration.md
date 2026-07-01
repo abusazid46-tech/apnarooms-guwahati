@@ -50,10 +50,14 @@ RAZORPAY_WEBHOOK_SECRET=
 Optional during first deployment only:
 
 ```env
-PRISMA_ACCEPT_DATA_LOSS=false
+HOSTINGER_SKIP_DB_SYNC=true
 ```
 
-The API build runs `prisma db push` only when `DATABASE_URL` exists. If Hostinger cannot reach the database during build, remove `DATABASE_URL` for the first build, deploy, then run the Prisma sync manually from a machine that can reach the database.
+Hostinger cannot execute Prisma's native schema engine in the build sandbox, so API deployment skips `prisma db push`. Run schema sync separately from a local machine or another environment that can execute Prisma:
+
+```text
+pnpm db:push
+```
 
 ## After Deployment
 

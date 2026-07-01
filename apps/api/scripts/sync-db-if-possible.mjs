@@ -1,5 +1,15 @@
 import { spawnSync } from "node:child_process";
 
+const isHostingerBuild =
+  process.env.HOSTINGER_SKIP_DB_SYNC === "true" ||
+  process.cwd().includes("/.builds/source/repository") ||
+  process.cwd().includes("\\.builds\\source\\repository");
+
+if (isHostingerBuild) {
+  console.log("Hostinger build detected; skipping Prisma db push. Run schema sync separately.");
+  process.exit(0);
+}
+
 if (!process.env.DATABASE_URL) {
   console.log("DATABASE_URL is not set; skipping Prisma db push.");
   process.exit(0);
