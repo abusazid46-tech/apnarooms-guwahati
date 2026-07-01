@@ -14,12 +14,14 @@ Do not move the database to Hostinger MySQL unless the Prisma schema is intentio
 
 Deploy from the repository root, not from `apps/api`, because the API depends on workspace packages in `packages/db` and `packages/shared`.
 
+The repository root now includes a Node entry file, `server.js`, so Hostinger's Git importer can detect it as a Node.js app. The root entry only starts the compiled API server from `apps/api/dist/server.js`.
+
 Use these commands:
 
 ```text
 Install command: corepack enable && pnpm install --frozen-lockfile
 Build command: corepack enable && pnpm run hostinger:build
-Start command: corepack enable && pnpm run hostinger:start
+Start command: corepack enable && pnpm start
 Node.js version: 22
 ```
 

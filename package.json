@@ -1,12 +1,18 @@
 {
   "name": "apnarooms",
   "private": true,
+  "type": "module",
+  "main": "server.js",
   "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": "22.x"
+  },
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
     "hostinger:build": "pnpm --filter @apnarooms/shared build && pnpm --filter @apnarooms/db build && pnpm --filter @apnarooms/api build",
     "hostinger:start": "pnpm --filter @apnarooms/api start",
+    "start": "node server.js",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "db:generate": "pnpm --filter @apnarooms/db prisma:generate",
