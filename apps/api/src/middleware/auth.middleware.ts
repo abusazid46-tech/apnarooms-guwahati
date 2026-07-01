@@ -1,5 +1,5 @@
 import type { NextFunction, Request, Response } from "express";
-import { firebaseAdmin } from "../config/firebase-admin.js";
+import { getFirebaseAdmin } from "../config/firebase-admin.js";
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
   try {
@@ -11,10 +11,15 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
       return;
     }
 
-    const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+    const decodedToken = await getFirebaseAdmin().auth().verifyIdToken(token);
     res.locals.firebaseUser = decodedToken;
     next();
-  } catch {
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("Firebase Admin environment variables")) {
+      res.status(503).json({ message: "Firebase Admin is not configured" });
+      return;
+    }
+
     res.status(401).json({ message: "Invalid auth token" });
   }
 }
