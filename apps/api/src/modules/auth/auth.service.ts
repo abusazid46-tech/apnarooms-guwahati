@@ -12,23 +12,37 @@ type FirebaseUser = {
 export async function syncUser(firebaseUser: FirebaseUser) {
   const existingUserCount = await prisma.user.count();
   const normalizedEmail = firebaseUser.email?.toLowerCase() ?? null;
+  const normalizedPhone = firebaseUser.phone_number ?? null;
   const isConfiguredAdmin = Boolean(normalizedEmail && env.ADMIN_EMAILS.includes(normalizedEmail));
+  const userData = {
+    firebaseUid: firebaseUser.uid,
+    email: firebaseUser.email ?? null,
+    phone: normalizedPhone,
+    name: firebaseUser.name ?? null,
+    avatarUrl: firebaseUser.picture ?? null,
+    ...(isConfiguredAdmin ? { role: "ADMIN" as const } : {})
+  };
 
-  return prisma.user.upsert({
-    where: { firebaseUid: firebaseUser.uid },
-    update: {
-      email: firebaseUser.email ?? null,
-      phone: firebaseUser.phone_number ?? null,
-      name: firebaseUser.name ?? null,
-      avatarUrl: firebaseUser.picture ?? null,
-      role: isConfiguredAdmin ? "ADMIN" : undefined
-    },
-    create: {
-      firebaseUid: firebaseUser.uid,
-      email: firebaseUser.email ?? null,
-      phone: firebaseUser.phone_number ?? null,
-      name: firebaseUser.name ?? null,
-      avatarUrl: firebaseUser.picture ?? null,
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      OR: [
+        { firebaseUid: firebaseUser.uid },
+        ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
+        ...(normalizedPhone ? [{ phone: normalizedPhone }] : [])
+      ]
+    }
+  });
+
+  if (existingUser) {
+    return prisma.user.update({
+      where: { id: existingUser.id },
+      data: userData
+    });
+  }
+
+  return prisma.user.create({
+    data: {
+      ...userData,
       role: isConfiguredAdmin || existingUserCount === 0 ? "ADMIN" : "USER"
     }
   });
