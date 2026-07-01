@@ -1,0 +1,83 @@
+# Hostinger Node.js Migration
+
+This project can move the API from Render to Hostinger Node.js hosting without changing the app code architecture.
+
+## What Moves
+
+- Move `apps/api` from Render to Hostinger Node.js/Web Apps hosting.
+- Keep the database on PostgreSQL, for example Supabase or the current external PostgreSQL provider.
+- Keep the Next.js web frontend on Vercel unless you also plan to move the frontend separately.
+
+Do not move the database to Hostinger MySQL unless the Prisma schema is intentionally migrated from PostgreSQL to MySQL.
+
+## Hostinger App Settings
+
+Deploy from the repository root, not from `apps/api`, because the API depends on workspace packages in `packages/db` and `packages/shared`.
+
+Use these commands:
+
+```text
+Install command: corepack enable && pnpm install --frozen-lockfile
+Build command: corepack enable && pnpm run hostinger:build
+Start command: corepack enable && pnpm run hostinger:start
+Node.js version: 22
+```
+
+The API already listens on `process.env.PORT`, which Hostinger should provide:
+
+```ts
+API_PORT: Number(process.env.PORT ?? process.env.API_PORT ?? 4000)
+```
+
+## Environment Variables
+
+Set these in Hostinger for the Node.js app:
+
+```env
+DATABASE_URL=
+CORS_ORIGIN=https://www.apnarooms.com,https://apnarooms.com
+FIREBASE_PROJECT_ID=
+FIREBASE_CLIENT_EMAIL=
+FIREBASE_PRIVATE_KEY=
+ADMIN_EMAILS=
+RAZORPAY_KEY_ID=
+RAZORPAY_KEY_SECRET=
+RAZORPAY_WEBHOOK_SECRET=
+```
+
+Optional during first deployment only:
+
+```env
+PRISMA_ACCEPT_DATA_LOSS=false
+```
+
+The API build runs `prisma db push` only when `DATABASE_URL` exists. If Hostinger cannot reach the database during build, remove `DATABASE_URL` for the first build, deploy, then run the Prisma sync manually from a machine that can reach the database.
+
+## After Deployment
+
+1. Open Hostinger's generated app URL and verify:
+
+```text
+https://HOSTINGER_APP_URL/health
+```
+
+Expected response:
+
+```json
+{"ok":true}
+```
+
+2. Update the frontend and mobile API base URL:
+
+```env
+NEXT_PUBLIC_API_BASE_URL=https://HOSTINGER_APP_URL/api
+EXPO_PUBLIC_API_BASE_URL=https://HOSTINGER_APP_URL/api
+```
+
+3. Update Razorpay webhook endpoint:
+
+```text
+https://HOSTINGER_APP_URL/api/payments/webhook
+```
+
+4. Redeploy the web frontend and rebuild mobile APKs after changing the API URL.

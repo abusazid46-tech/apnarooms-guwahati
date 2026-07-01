@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "turbo dev",
     "build": "turbo build",
+    "hostinger:build": "pnpm --filter @apnarooms/shared build && pnpm --filter @apnarooms/db build && pnpm --filter @apnarooms/api build",
+    "hostinger:start": "pnpm --filter @apnarooms/api start",
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "db:generate": "pnpm --filter @apnarooms/db prisma:generate",
