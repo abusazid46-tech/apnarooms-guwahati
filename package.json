@@ -22,18 +22,6 @@
     "db:promote-admin": "pnpm --filter @apnarooms/db prisma:promote-admin",
     "db:seed-launch": "pnpm --filter @apnarooms/db prisma:seed-launch"
   },
-  "pnpm": {
-    "onlyBuiltDependencies": [
-      "@firebase/util",
-      "@prisma/client",
-      "@prisma/engines",
-      "esbuild",
-      "msgpackr-extract",
-      "prisma",
-      "protobufjs",
-      "sharp"
-    ]
-  },
   "devDependencies": {
     "turbo": "^2.4.4",
     "typescript": "^5.8.2"
