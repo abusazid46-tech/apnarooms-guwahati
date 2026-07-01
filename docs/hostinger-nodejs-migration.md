@@ -19,7 +19,7 @@ The repository root now includes a Node entry file, `server.js`, so Hostinger's 
 Use these commands:
 
 ```text
-Install command: pnpm install --frozen-lockfile
+Install command: pnpm install --frozen-lockfile --ignore-scripts
 Build command: pnpm run hostinger:build
 Start command: pnpm start
 Node.js version: 22
