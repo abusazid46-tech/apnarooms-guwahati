@@ -8,7 +8,9 @@ if (!process.env.DATABASE_URL) {
 const acceptDataLoss = ["true", "1", "yes"].includes(
   String(process.env.PRISMA_ACCEPT_DATA_LOSS ?? "").toLowerCase()
 );
-const prismaArgs = ["--filter", "@apnarooms/db", "exec", "prisma", "db", "push"];
+const pnpmCommand = process.env.npm_execpath ? process.execPath : "pnpm";
+const pnpmArgs = process.env.npm_execpath ? [process.env.npm_execpath] : [];
+const prismaArgs = [...pnpmArgs, "--filter", "@apnarooms/db", "exec", "prisma", "db", "push"];
 
 if (acceptDataLoss) {
   prismaArgs.push("--accept-data-loss");
@@ -19,7 +21,7 @@ console.log(
 );
 
 const result = spawnSync(
-  "pnpm",
+  pnpmCommand,
   prismaArgs,
   {
     stdio: "inherit",
