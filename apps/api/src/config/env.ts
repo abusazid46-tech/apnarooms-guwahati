@@ -39,26 +39,3 @@ export const env = {
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean) ?? []
 };
-
-export function firebaseEnvDiagnostics() {
-  const rawKey = process.env.FIREBASE_PRIVATE_KEY ?? "";
-  const base64Key = process.env.FIREBASE_PRIVATE_KEY_BASE64 ?? "";
-  const cleanKey = env.FIREBASE_PRIVATE_KEY;
-
-  return {
-    projectIdPresent: Boolean(env.FIREBASE_PROJECT_ID),
-    clientEmailPresent: Boolean(env.FIREBASE_CLIENT_EMAIL),
-    clientEmailMatchesProject: Boolean(
-      env.FIREBASE_PROJECT_ID && env.FIREBASE_CLIENT_EMAIL.includes(env.FIREBASE_PROJECT_ID)
-    ),
-    rawPrivateKeyPresent: Boolean(rawKey),
-    rawPrivateKeyLength: rawKey.length,
-    base64PrivateKeyPresent: Boolean(base64Key),
-    cleanPrivateKeyPresent: Boolean(cleanKey),
-    cleanPrivateKeyLength: cleanKey.length,
-    cleanPrivateKeyLineCount: cleanKey ? cleanKey.split("\n").length : 0,
-    cleanPrivateKeyStartsCorrectly: cleanKey.startsWith("-----BEGIN PRIVATE KEY-----"),
-    cleanPrivateKeyEndsCorrectly: cleanKey.endsWith("-----END PRIVATE KEY-----"),
-    cleanPrivateKeyStillHasLiteralSlashN: cleanKey.includes("\\n")
-  };
-}
