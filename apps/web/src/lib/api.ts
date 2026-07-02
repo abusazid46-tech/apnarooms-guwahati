@@ -1,6 +1,14 @@
 import type { User } from "firebase/auth";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "https://darkred-coyote-647666.hostingersite.com/api";
+const DEFAULT_API_BASE_URL = "https://darkred-coyote-647666.hostingersite.com/api";
+
+function normalizeApiBaseUrl(value: string) {
+  const trimmed = value.trim().replace(/\/+$/, "");
+  if (!trimmed) return DEFAULT_API_BASE_URL;
+  return trimmed.endsWith("/api") ? trimmed : `${trimmed}/api`;
+}
+
+const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL);
 
 export class ApiError extends Error {
   constructor(

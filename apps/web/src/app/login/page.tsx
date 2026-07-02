@@ -6,7 +6,7 @@ import { getFirebaseAuth } from "@/lib/firebase";
 import { useAuth } from "@/hooks/useAuth";
 
 export default function LoginPage() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, authError } = useAuth();
   const [nextPath, setNextPath] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -14,6 +14,7 @@ export default function LoginPage() {
   const [confirmation, setConfirmation] = useState<ConfirmationResult | null>(null);
   const recaptchaRef = useRef<RecaptchaVerifier | null>(null);
   const isOwnerLogin = nextPath.includes("owner=1");
+  const destination = nextPath || (profile && ["ADMIN", "SALES", "SUPPORT"].includes(profile.role) ? "/admin" : "/dashboard");
 
   useEffect(() => {
     const next = new URLSearchParams(window.location.search).get("next");
@@ -25,9 +26,9 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    if (!user || loading || !nextPath) return;
+    if (!user || loading || !profile || !nextPath) return;
     window.location.href = nextPath;
-  }, [loading, nextPath, user]);
+  }, [loading, nextPath, profile, user]);
 
   async function loginWithGoogle() {
     setMessage("");
@@ -68,13 +69,14 @@ export default function LoginPage() {
         <p>{isOwnerLogin ? "Use Google or phone OTP to open your owner dashboard and submit listings for admin approval." : "Use Google or phone OTP. First synced account becomes the admin bootstrap user."}</p>
 
         {loading ? <p>Checking session...</p> : null}
+        {authError ? <p className="auth-message">Account role sync failed: {authError}</p> : null}
 
         {user ? (
           <div className="auth-success">
             <strong>{profile?.name ?? user.phoneNumber ?? user.email ?? "Logged in user"}</strong>
-            <span>Role: {profile?.role ?? "syncing"}</span>
+            <span>Role: {loading ? "syncing" : profile?.role ?? "not synced"}</span>
             <div className="auth-actions">
-              <a href={nextPath || (profile && ["ADMIN", "SALES", "SUPPORT"].includes(profile.role) ? "/admin" : "/dashboard")}>Continue</a>
+              {profile ? <a href={destination}>Continue</a> : <button type="button" disabled>Continue</button>}
               <button
                 type="button"
                 onClick={async () => {

@@ -10,6 +10,7 @@ export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<BackendUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     let unsubscribe = () => {};
@@ -22,6 +23,9 @@ export function useAuth() {
 
         unsubscribe = onAuthStateChanged(auth, (nextUser) => {
           setUser(nextUser);
+          setLoading(true);
+          setAuthError(null);
+
           if (!nextUser) {
             setProfile(null);
             setLoading(false);
@@ -29,12 +33,23 @@ export function useAuth() {
           }
 
           apiPost<{ user: BackendUser }>("/auth/sync-user", {}, { user: nextUser })
-            .then((result) => setProfile(result.user))
-            .catch(() => setProfile(null))
-            .finally(() => setLoading(false));
+            .then((result) => {
+              if (active) setProfile(result.user);
+            })
+            .catch((error) => {
+              if (!active) return;
+              setProfile(null);
+              setAuthError(error instanceof Error ? error.message : "Could not sync account role");
+            })
+            .finally(() => {
+              if (active) setLoading(false);
+            });
         });
-      } catch {
-        if (active) setLoading(false);
+      } catch (error) {
+        if (active) {
+          setAuthError(error instanceof Error ? error.message : "Could not initialize login");
+          setLoading(false);
+        }
       }
     }
 
@@ -46,5 +61,11 @@ export function useAuth() {
     };
   }, []);
 
-  return { user, profile, loading, isAdmin: Boolean(profile && ["ADMIN", "SALES", "SUPPORT"].includes(profile.role)) };
+  return {
+    user,
+    profile,
+    loading,
+    authError,
+    isAdmin: Boolean(profile && ["ADMIN", "SALES", "SUPPORT"].includes(profile.role))
+  };
 }
