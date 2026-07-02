@@ -1,8 +1,28 @@
+function stripWrappingQuotes(value: string) {
+  return value.replace(/^['"]|['"]$/g, "");
+}
+
+function decodeBase64(value?: string) {
+  if (!value?.trim()) return "";
+
+  try {
+    return Buffer.from(value.trim(), "base64").toString("utf8");
+  } catch {
+    return "";
+  }
+}
+
 function cleanPrivateKey(value?: string) {
-  return value
-    ?.trim()
-    .replace(/^['"]|['"]$/g, "")
-    .replace(/\\n/g, "\n") ?? "";
+  const rawValue = value?.trim() || decodeBase64(process.env.FIREBASE_PRIVATE_KEY_BASE64);
+  if (!rawValue) return "";
+
+  let key = stripWrappingQuotes(rawValue.trim());
+
+  for (let index = 0; index < 3 && key.includes("\\n"); index += 1) {
+    key = key.replace(/\\n/g, "\n");
+  }
+
+  return key.replace(/\r\n/g, "\n").trim();
 }
 
 export const env = {
