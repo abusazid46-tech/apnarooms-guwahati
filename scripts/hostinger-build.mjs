@@ -1,16 +1,32 @@
 import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
-const packages = ["@apnarooms/shared", "@apnarooms/db", "@apnarooms/api"];
+const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const isWindows = process.platform === "win32";
 
-function runPnpm(args) {
-  const command = process.env.npm_execpath ? process.execPath : "pnpm";
-  const commandArgs = process.env.npm_execpath
-    ? [process.env.npm_execpath, ...args]
-    : args;
+function binName(name) {
+  return isWindows ? `${name}.cmd` : name;
+}
 
-  const result = spawnSync(command, commandArgs, {
+function localBin(name, cwd) {
+  const candidates = [
+    path.join(cwd, "node_modules", ".bin", binName(name)),
+    path.join(rootDir, "node_modules", ".bin", binName(name))
+  ];
+
+  const command = candidates.find((candidate) => fs.existsSync(candidate));
+  return command ?? candidates[candidates.length - 1];
+}
+
+function run(command, args, cwd, options = {}) {
+  console.log(`$ ${[command, ...args].join(" ")}`);
+
+  const result = spawnSync(command, args, {
+    cwd,
     stdio: "inherit",
-    shell: false
+    shell: options.shell ?? isWindows
   });
 
   if (result.error) {
@@ -23,6 +39,12 @@ function runPnpm(args) {
   }
 }
 
-for (const packageName of packages) {
-  runPnpm(["--filter", packageName, "build"]);
-}
+const sharedDir = path.join(rootDir, "packages", "shared");
+const dbDir = path.join(rootDir, "packages", "db");
+const apiDir = path.join(rootDir, "apps", "api");
+
+run(localBin("tsc", sharedDir), [], sharedDir);
+run(localBin("prisma", dbDir), ["generate"], dbDir);
+run(localBin("tsc", dbDir), [], dbDir);
+run(process.execPath, [path.join(apiDir, "scripts", "sync-db-if-possible.mjs")], apiDir, { shell: false });
+run(localBin("tsc", apiDir), [], apiDir);
