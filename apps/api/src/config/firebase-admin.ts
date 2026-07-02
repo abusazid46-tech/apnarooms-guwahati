@@ -1,5 +1,5 @@
 import admin from "firebase-admin";
-import { env } from "./env.js";
+import { env, firebaseEnvDiagnostics } from "./env.js";
 
 export function getFirebaseAdmin() {
   if (admin.apps.length) {
@@ -17,4 +17,21 @@ export function getFirebaseAdmin() {
       privateKey: env.FIREBASE_PRIVATE_KEY
     })
   });
+}
+
+export function getFirebaseAdminDiagnostics() {
+  const config = firebaseEnvDiagnostics();
+
+  try {
+    getFirebaseAdmin();
+    return { ok: true, config };
+  } catch (error) {
+    const firebaseError = error as Error & { code?: string };
+    return {
+      ok: false,
+      config,
+      errorCode: firebaseError.code ?? null,
+      errorMessage: firebaseError.message
+    };
+  }
 }

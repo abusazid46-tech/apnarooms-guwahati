@@ -12,6 +12,7 @@ import { propertiesRoutes } from "./modules/properties/properties.routes.js";
 import { uploadsRoutes } from "./modules/uploads/uploads.routes.js";
 import { usersRoutes } from "./modules/users/users.routes.js";
 import { env } from "./config/env.js";
+import { getFirebaseAdminDiagnostics } from "./config/firebase-admin.js";
 import { errorMiddleware } from "./middleware/error.middleware.js";
 
 const defaultAllowedOrigins = [
@@ -47,6 +48,7 @@ export function createApp() {
   app.use(express.json({ limit: "2mb" }));
 
   app.get("/health", (_req, res) => res.json({ ok: true }));
+  app.get("/api/debug/firebase", (_req, res) => res.json(getFirebaseAdminDiagnostics()));
   app.use("/api/auth", authRoutes);
   app.use("/api/users", usersRoutes);
   app.use("/api/properties", propertiesRoutes);
