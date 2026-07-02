@@ -1,7 +1,7 @@
 import { prisma } from "@apnarooms/db";
 import { env } from "../../config/env.js";
 
-type FirebaseUser = {
+export type FirebaseUser = {
   uid: string;
   email?: string;
   phone_number?: string;
@@ -9,11 +9,16 @@ type FirebaseUser = {
   picture?: string;
 };
 
+export function isConfiguredAdminUser(firebaseUser: FirebaseUser) {
+  const normalizedEmail = firebaseUser.email?.toLowerCase() ?? null;
+  return Boolean(normalizedEmail && env.ADMIN_EMAILS.includes(normalizedEmail));
+}
+
 export async function syncUser(firebaseUser: FirebaseUser) {
   const existingUserCount = await prisma.user.count();
   const normalizedEmail = firebaseUser.email?.toLowerCase() ?? null;
   const normalizedPhone = firebaseUser.phone_number ?? null;
-  const isConfiguredAdmin = Boolean(normalizedEmail && env.ADMIN_EMAILS.includes(normalizedEmail));
+  const isConfiguredAdmin = isConfiguredAdminUser(firebaseUser);
   const userData = {
     firebaseUid: firebaseUser.uid,
     email: firebaseUser.email ?? null,
