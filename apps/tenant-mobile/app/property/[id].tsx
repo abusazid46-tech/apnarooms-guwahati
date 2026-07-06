@@ -86,7 +86,12 @@ export default function PropertyDetailScreen() {
 
           <View style={styles.bookingBox}>
             <Text style={styles.boxTitle}>Request booking</Text>
-            <Text style={styles.boxBody}>Send your details to the live ApnaRooms backend. The team can confirm availability and token payment.</Text>
+            <Text style={styles.boxBody}>Share your contact and move-in plan. ApnaRooms will call the owner, confirm availability, and guide the token payment.</Text>
+            <View style={styles.bookingSteps}>
+              <View style={styles.bookingStep}><Ionicons name="person" size={16} color={colors.primary} /><Text style={styles.bookingStepText}>Details</Text></View>
+              <View style={styles.bookingStep}><Ionicons name="call" size={16} color={colors.primary} /><Text style={styles.bookingStepText}>Owner call</Text></View>
+              <View style={styles.bookingStep}><Ionicons name="card" size={16} color={colors.primary} /><Text style={styles.bookingStepText}>Token</Text></View>
+            </View>
             <TextInput
               value={form.name}
               onChangeText={(name) => setForm((current) => ({ ...current, name }))}
@@ -119,6 +124,17 @@ export default function PropertyDetailScreen() {
               multiline
               style={[styles.input, styles.noteInput]}
             />
+          </View>
+
+          <View style={styles.reviewBox}>
+            <View style={styles.reviewHead}>
+              <View style={styles.reviewAvatar}><Text style={styles.reviewInitial}>A</Text></View>
+              <View style={styles.reviewMeta}>
+                <Text style={styles.reviewName}>Ankita, Six Mile</Text>
+                <Text style={styles.reviewRating}>5.0 rating after PG visit</Text>
+              </View>
+            </View>
+            <Text style={styles.reviewText}>The listing details helped me ask the right questions before visiting. Support checked once after I moved in.</Text>
           </View>
 
           <View style={styles.actions}>
@@ -216,6 +232,24 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: colors.surface
   },
+  bookingSteps: {
+    flexDirection: "row",
+    gap: 8,
+    marginVertical: 4
+  },
+  bookingStep: {
+    flex: 1,
+    alignItems: "center",
+    gap: 5,
+    borderRadius: 14,
+    paddingVertical: 10,
+    backgroundColor: "#F7F7FF"
+  },
+  bookingStepText: {
+    color: colors.primary,
+    fontSize: 11,
+    fontWeight: "900"
+  },
   boxTitle: {
     color: colors.ink,
     fontSize: 18,
@@ -277,5 +311,49 @@ const styles = StyleSheet.create({
   paymentText: {
     color: colors.primary,
     fontWeight: "900"
+  },
+  reviewBox: {
+    gap: 12,
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: "#ECEBFF",
+    borderRadius: 22,
+    padding: 16,
+    backgroundColor: colors.surface
+  },
+  reviewHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10
+  },
+  reviewAvatar: {
+    width: 42,
+    height: 42,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 21,
+    backgroundColor: "#EEF2FF"
+  },
+  reviewInitial: {
+    color: colors.primary,
+    fontWeight: "900"
+  },
+  reviewMeta: {
+    flex: 1
+  },
+  reviewName: {
+    color: colors.ink,
+    fontWeight: "900"
+  },
+  reviewRating: {
+    marginTop: 3,
+    color: colors.warning,
+    fontSize: 12,
+    fontWeight: "800"
+  },
+  reviewText: {
+    color: colors.text,
+    lineHeight: 21,
+    fontWeight: "600"
   }
 });

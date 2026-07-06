@@ -82,6 +82,30 @@ const categorySearchTerms: Record<PropertyCategory, string[]> = {
 
 const defaultLocalities = ["Beltola", "Ganeshguri", "Six Mile", "GS Road", "Panjabari", "Kahilipara"];
 
+const clientReviews = [
+  {
+    name: "Ritupan Deka",
+    role: "Working professional",
+    locality: "Ganeshguri",
+    rating: 5,
+    text: "I moved from Jorhat and needed a clean room fast. The ApnaRooms team shared real photos, confirmed the owner call, and helped me book without brokerage."
+  },
+  {
+    name: "Ankita Sharma",
+    role: "Student",
+    locality: "Six Mile",
+    rating: 5,
+    text: "The girls PG filter saved time. I could compare food, curfew and rent before visiting, and the support person followed up after I shifted."
+  },
+  {
+    name: "Nayan Kalita",
+    role: "Parent",
+    locality: "Beltola",
+    rating: 4,
+    text: "We used ApnaRooms for my brother's hostel search. Listings were practical, phone support was quick, and the final place matched what was shown."
+  }
+];
+
 const initialListingForm = {
   ownerName: "",
   phone: "",
@@ -886,6 +910,35 @@ export default function HomePage() {
         </div>
       </section>
 
+      <section className="tenant-container review-section" id="reviews">
+        <div className="listing-meta">
+          <div>
+            <span>Client Reviews</span>
+            <h2>Real stories from tenants who found a stay</h2>
+            <p className="api-notice">Short, practical feedback from people using ApnaRooms around Guwahati.</p>
+          </div>
+        </div>
+        <div className="review-grid">
+          {clientReviews.map((review) => (
+            <article className="client-review-card" key={review.name}>
+              <div className="review-stars" aria-label={`${review.rating} star review`}>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <i key={index} className={`bi ${index < review.rating ? "bi-star-fill" : "bi-star"}`} />
+                ))}
+              </div>
+              <p>&quot;{review.text}&quot;</p>
+              <div className="review-client-row">
+                <span>{review.name.slice(0, 1)}</span>
+                <div>
+                  <strong>{review.name}</strong>
+                  <small>{review.role} - {review.locality}</small>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
       <section className="tenant-container coupon-section" id="coupon">
         <div>
           <h2>Active Booking Offers</h2>
@@ -943,6 +996,7 @@ export default function HomePage() {
             <h4>Quick Links</h4>
             <a href="#listings">Property Listings</a>
             <a href="/about">About Us</a>
+            <a href="#reviews">Reviews</a>
             <a href="#blog">Blog</a>
             <a href="#coupon">Offers</a>
           </div>

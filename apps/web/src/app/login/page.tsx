@@ -66,7 +66,7 @@ export default function LoginPage() {
       <section className="auth-card">
         <a href="/" className="auth-brand">ApnaRooms.com</a>
         <h1>{isOwnerLogin ? "Login or register as a property owner" : "Login to continue"}</h1>
-        <p>{isOwnerLogin ? "Use Google or phone OTP to open your owner dashboard and submit listings for admin approval." : "Use Google or phone OTP. First synced account becomes the admin bootstrap user."}</p>
+        <p>{isOwnerLogin ? "Use Google or phone OTP to open your owner dashboard and submit listings for admin approval." : "Use Google or phone OTP to manage bookings, payments, saved properties, and support requests."}</p>
 
         {loading ? <p>Checking session...</p> : null}
         {authError ? <p className="auth-message">Account role sync failed: {authError}</p> : null}
