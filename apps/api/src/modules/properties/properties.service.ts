@@ -6,7 +6,7 @@ type PropertyInput = {
   title: string;
   slug?: string;
   description?: string;
-  category: "PG" | "HOMESTAY" | "FLAT" | "ROOM";
+  category: "PG" | "GIRLS_PG" | "BOYS_PG" | "ROOM" | "FLAT" | "HOMESTAY" | "HOSTEL";
   status?: "DRAFT" | "PUBLISHED" | "UNPUBLISHED" | "ARCHIVED";
   rentMonthly: number;
   depositAmount?: number;
@@ -32,6 +32,8 @@ type ImageInput = {
   alt?: string;
   sortOrder?: number;
 };
+
+const propertyCategories = new Set(["PG", "GIRLS_PG", "BOYS_PG", "ROOM", "FLAT", "HOMESTAY", "HOSTEL"]);
 
 const propertyInclude = {
   images: { orderBy: { sortOrder: "asc" as const } },
@@ -61,6 +63,49 @@ function asBoolean(value: unknown) {
   return undefined;
 }
 
+function asPropertyCategory(value: unknown) {
+  const category = asString(value);
+  return category && propertyCategories.has(category) ? category : undefined;
+}
+
+function keywordWhere(words: string[]) {
+  return {
+    OR: words.flatMap((word) => [
+      { title: { contains: word, mode: "insensitive" as const } },
+      { description: { contains: word, mode: "insensitive" as const } },
+      { address: { contains: word, mode: "insensitive" as const } },
+      { amenities: { has: word } }
+    ])
+  };
+}
+
+function categoryWhere(category?: string) {
+  if (!category) return {};
+  if (category === "PG") return { category: { in: ["PG", "GIRLS_PG", "BOYS_PG"] } };
+  if (category === "GIRLS_PG") return { OR: [{ category: "GIRLS_PG" }, { AND: [{ category: "PG" }, keywordWhere(["girl", "girls", "female", "women", "ladies"])] }] };
+  if (category === "BOYS_PG") return { OR: [{ category: "BOYS_PG" }, { AND: [{ category: "PG" }, keywordWhere(["boy", "boys", "male", "men", "gents"])] }] };
+  if (category === "HOSTEL") return { OR: [{ category: "HOSTEL" }, keywordWhere(["hostel"])] };
+  if (category === "ROOM") return { OR: [{ category: "ROOM" }, keywordWhere(["room", "rooms", "rental room"])] };
+  return { category };
+}
+
+function searchWhere(search?: string) {
+  if (!search) return {};
+  return {
+    OR: [
+      { title: { contains: search, mode: "insensitive" as const } },
+      { locality: { contains: search, mode: "insensitive" as const } },
+      { city: { contains: search, mode: "insensitive" as const } },
+      { address: { contains: search, mode: "insensitive" as const } },
+      { amenities: { has: search } }
+    ]
+  };
+}
+
+function hasKeys(value: Record<string, unknown>) {
+  return Object.keys(value).length > 0;
+}
+
 function slugify(value: string) {
   return value
     .toLowerCase()
@@ -71,7 +116,7 @@ function slugify(value: string) {
 
 function buildWhere(query: Record<string, unknown>, admin = false): any {
   const search = asString(query.search);
-  const category = asString(query.category);
+  const category = asPropertyCategory(query.category);
   const locality = asString(query.locality);
   const city = asString(query.city);
   const status = asString(query.status);
@@ -79,10 +124,11 @@ function buildWhere(query: Record<string, unknown>, admin = false): any {
   const maxPrice = asNumber(query.maxPrice);
   const isVerified = asBoolean(query.verified);
   const isAvailable = asBoolean(query.available);
+  const andFilters = [categoryWhere(category), searchWhere(search)].filter(hasKeys);
 
   return {
     ...(!admin ? { status: "PUBLISHED", isAvailable: true } : status ? { status } : {}),
-    ...(category ? { category } : {}),
+    ...(andFilters.length ? { AND: andFilters } : {}),
     ...(locality ? { locality: { contains: locality, mode: "insensitive" } } : {}),
     ...(city ? { city: { contains: city, mode: "insensitive" } } : {}),
     ...(typeof isVerified === "boolean" ? { isVerified } : {}),
@@ -95,16 +141,6 @@ function buildWhere(query: Record<string, unknown>, admin = false): any {
           }
         }
       : {}),
-    ...(search
-      ? {
-          OR: [
-            { title: { contains: search, mode: "insensitive" } },
-            { locality: { contains: search, mode: "insensitive" } },
-            { city: { contains: search, mode: "insensitive" } },
-            { address: { contains: search, mode: "insensitive" } }
-          ]
-        }
-      : {})
   };
 }
 

@@ -17,9 +17,12 @@ enum Role {
 
 enum PropertyCategory {
   PG
+  GIRLS_PG
+  BOYS_PG
   HOMESTAY
   FLAT
   ROOM
+  HOSTEL
 }
 
 enum PropertyStatus {

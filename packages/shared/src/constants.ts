@@ -1,4 +1,4 @@
-export const PROPERTY_CATEGORIES = ["PG", "HOMESTAY", "FLAT", "ROOM"] as const;
+export const PROPERTY_CATEGORIES = ["PG", "GIRLS_PG", "BOYS_PG", "ROOM", "FLAT", "HOMESTAY", "HOSTEL"] as const;
 
 export const CRM_LEAD_STATUSES = [
   "NEW",

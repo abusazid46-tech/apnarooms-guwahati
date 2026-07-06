@@ -15,12 +15,16 @@ export default function ProfileScreen() {
           <View style={styles.avatar}>
             <Ionicons name="person" size={34} color={colors.primary} />
           </View>
-          <Text style={styles.title}>Login will connect Firebase Auth</Text>
-          <Text style={styles.body}>Google login and phone OTP should be wired here after Firebase mobile credentials are added.</Text>
+          <Text style={styles.title}>ApnaRooms account</Text>
+          <Text style={styles.body}>Use the secure ApnaRooms login for token payment, dashboard, and confirmed booking history.</Text>
         </View>
         <TouchableOpacity style={[styles.action, styles.secondary]} onPress={() => WebBrowser.openBrowserAsync(`${env.webUrl}/login`)}>
           <Ionicons name="log-in" size={20} color={colors.primary} />
-          <Text style={[styles.actionText, styles.secondaryText]}>Open web login</Text>
+          <Text style={[styles.actionText, styles.secondaryText]}>Login securely</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.action} onPress={() => WebBrowser.openBrowserAsync(`${env.webUrl}/dashboard`)}>
+          <Ionicons name="calendar" size={20} color="#fff" />
+          <Text style={styles.actionText}>Open dashboard</Text>
         </TouchableOpacity>
       </View>
     </AppScreen>

@@ -9,7 +9,7 @@ import { createOwnerProperty } from "@/services/ownerProperties";
 import { colors, shadow } from "@/theme/colors";
 import type { BackendProperty } from "@/types/api";
 
-const categories: BackendProperty["category"][] = ["PG", "HOMESTAY", "FLAT", "ROOM"];
+const categories: BackendProperty["category"][] = ["PG", "GIRLS_PG", "BOYS_PG", "ROOM", "FLAT", "HOMESTAY", "HOSTEL"];
 
 const initialForm = {
   ownerName: "",

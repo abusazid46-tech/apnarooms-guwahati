@@ -1,5 +1,5 @@
 pluginManagement {
-  def nodeExecutable = "C:/Users/User/Documents/Codex/apnarooms-mobile-toolchain/node/v22.23.0/node.exe"
+  def nodeExecutable = System.getenv("NODE_BINARY") ?: "node"
   def reactNativeGradlePlugin = new File(
     providers.exec {
       workingDir(rootDir)

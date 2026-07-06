@@ -58,7 +58,7 @@ const propertySchema = z.object({
   title: z.string().trim().min(3),
   slug: optionalTrimmedString(z.string().min(3)),
   description: optionalTrimmedString(z.string()),
-  category: z.enum(["PG", "HOMESTAY", "FLAT", "ROOM"]),
+  category: z.enum(["PG", "GIRLS_PG", "BOYS_PG", "ROOM", "FLAT", "HOMESTAY", "HOSTEL"]),
   status: z.enum(["DRAFT", "PUBLISHED", "UNPUBLISHED", "ARCHIVED"]).optional(),
   rentMonthly: z.coerce.number().int().positive(),
   depositAmount: z.coerce.number().int().nonnegative().optional(),

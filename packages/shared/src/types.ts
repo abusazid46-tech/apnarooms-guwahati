@@ -1,6 +1,6 @@
 export type UserRole = "USER" | "ADMIN" | "SALES" | "SUPPORT" | "LANDLORD";
 
-export type PropertyCategory = "PG" | "HOMESTAY" | "FLAT" | "ROOM";
+export type PropertyCategory = "PG" | "GIRLS_PG" | "BOYS_PG" | "ROOM" | "FLAT" | "HOMESTAY" | "HOSTEL";
 
 export type BookingStatus = "PENDING_PAYMENT" | "CONFIRMED" | "CANCELLED" | "REFUNDED";
 

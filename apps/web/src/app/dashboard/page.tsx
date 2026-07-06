@@ -355,9 +355,12 @@ export default function TenantDashboardPage() {
             <textarea value={ownerForm.description} onChange={(e) => setOwnerForm({ ...ownerForm, description: e.target.value })} placeholder="Short listing description" />
             <select value={ownerForm.category} onChange={(e) => setOwnerForm({ ...ownerForm, category: e.target.value })}>
               <option value="PG">PG</option>
-              <option value="HOMESTAY">Homestay</option>
-              <option value="FLAT">Flat</option>
+              <option value="GIRLS_PG">Girls PG</option>
+              <option value="BOYS_PG">Boys PG</option>
               <option value="ROOM">Room</option>
+              <option value="FLAT">Flat</option>
+              <option value="HOMESTAY">Homestay</option>
+              <option value="HOSTEL">Hostel</option>
             </select>
             <input value={ownerForm.rentMonthly} onChange={(e) => setOwnerForm({ ...ownerForm, rentMonthly: e.target.value })} inputMode="numeric" placeholder={ownerForm.category === "HOMESTAY" ? "Daily rate" : "Monthly rent"} required />
             <input value={ownerForm.depositAmount} onChange={(e) => setOwnerForm({ ...ownerForm, depositAmount: e.target.value })} inputMode="numeric" placeholder="Deposit amount" />

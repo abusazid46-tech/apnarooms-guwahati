@@ -7,7 +7,7 @@ import { loadRazorpayCheckout } from "@/lib/razorpay";
 import { useAuth } from "@/hooks/useAuth";
 import type { BackendBooking, BackendProperty } from "@/types/api";
 
-type PropertyCategory = "PG" | "Homestay" | "Flat" | "Roommate";
+type PropertyCategory = BackendProperty["category"];
 
 type Property = {
   id: string;
@@ -46,19 +46,28 @@ type CategoryTile = {
   value: "all" | PropertyCategory;
   label: string;
   icon: string;
-  query?: string;
 };
 
 const categories: CategoryTile[] = [
   { key: "all", value: "all", label: "All", icon: "bi-grid" },
   { key: "pg", value: "PG", label: "PG", icon: "bi-building" },
-  { key: "girls-pg", value: "PG", label: "Girls PG", icon: "bi-person-hearts", query: "girls" },
-  { key: "boys-pg", value: "PG", label: "Boys PG", icon: "bi-person-check", query: "boys" },
-  { key: "room", value: "Roommate", label: "Rooms", icon: "bi-door-open" },
-  { key: "flat", value: "Flat", label: "Flats", icon: "bi-houses" },
-  { key: "homestay", value: "Homestay", label: "Homestay", icon: "bi-house-heart" },
-  { key: "hostel", value: "all", label: "Hostel", icon: "bi-buildings", query: "hostel" }
+  { key: "girls-pg", value: "GIRLS_PG", label: "Girls PG", icon: "bi-person-hearts" },
+  { key: "boys-pg", value: "BOYS_PG", label: "Boys PG", icon: "bi-person-check" },
+  { key: "room", value: "ROOM", label: "Rooms", icon: "bi-door-open" },
+  { key: "flat", value: "FLAT", label: "Flats", icon: "bi-houses" },
+  { key: "homestay", value: "HOMESTAY", label: "Homestay", icon: "bi-house-heart" },
+  { key: "hostel", value: "HOSTEL", label: "Hostel", icon: "bi-buildings" }
 ];
+
+const categoryLabels: Record<PropertyCategory, string> = {
+  PG: "PG",
+  GIRLS_PG: "Girls PG",
+  BOYS_PG: "Boys PG",
+  ROOM: "Rooms",
+  FLAT: "Flats",
+  HOMESTAY: "Homestay",
+  HOSTEL: "Hostel"
+};
 
 const defaultLocalities = ["Beltola", "Ganeshguri", "Six Mile", "GS Road", "Panjabari", "Kahilipara"];
 
@@ -130,13 +139,6 @@ function normaliseImages(images: string[]) {
 }
 
 function mapBackendProperty(property: BackendProperty): Property {
-  const categoryMap: Record<BackendProperty["category"], PropertyCategory> = {
-    PG: "PG",
-    HOMESTAY: "Homestay",
-    FLAT: "Flat",
-    ROOM: "Roommate"
-  };
-
   return {
     id: property.id,
     name: property.title,
@@ -146,11 +148,28 @@ function mapBackendProperty(property: BackendProperty): Property {
     tokenAmount: property.tokenAmount,
     verified: property.isVerified,
     available: property.isAvailable,
-    category: categoryMap[property.category],
+    category: property.category,
     billingUnit: property.category === "HOMESTAY" ? "day" : "month",
     details: property.amenities.length ? property.amenities : [property.category, property.isAvailable ? "Available" : "Reserved"],
     images: normaliseImages(property.images.map((image) => image.url))
   };
+}
+
+function propertySearchText(property: Pick<Property, "name" | "location" | "locality" | "details">) {
+  return [property.name, property.location, property.locality, ...property.details].join(" ").toLowerCase();
+}
+
+function matchesCategoryFilter(property: Property, selectedCategory: "all" | PropertyCategory) {
+  if (selectedCategory === "all") return true;
+  if (selectedCategory === "PG") return ["PG", "GIRLS_PG", "BOYS_PG"].includes(property.category);
+  if (property.category === selectedCategory) return true;
+
+  const text = propertySearchText(property);
+  if (selectedCategory === "GIRLS_PG") return property.category === "PG" && /\b(girl|girls|female|women|ladies)\b/.test(text);
+  if (selectedCategory === "BOYS_PG") return property.category === "PG" && /\b(boy|boys|male|men|gents)\b/.test(text);
+  if (selectedCategory === "HOSTEL") return /\bhostel\b/.test(text);
+  if (selectedCategory === "ROOM") return /\b(room|rooms|rental room)\b/.test(text);
+  return false;
 }
 
 function PropertyImageCarousel({ property }: { property: Property }) {
@@ -319,13 +338,11 @@ export default function HomePage() {
     const max = maxPrice ? Number(maxPrice) : null;
 
     return properties.filter((property) => {
-      const matchesCategory = category === "all" || property.category === category;
+      const matchesCategory = matchesCategoryFilter(property, category);
+      const searchText = propertySearchText(property);
       const matchesQuery =
         !normalized ||
-        property.name.toLowerCase().includes(normalized) ||
-        property.location.toLowerCase().includes(normalized) ||
-        property.locality.toLowerCase().includes(normalized) ||
-        property.details.some((detail) => detail.toLowerCase().includes(normalized)) ||
+        searchText.includes(normalized) ||
         property.price.toString().includes(normalized);
       const matchesLocation = !location || property.locality === location;
       const matchesMin = min === null || property.price >= min;
@@ -534,7 +551,7 @@ export default function HomePage() {
 
   function selectCategory(item: CategoryTile) {
     setCategory(item.value);
-    setQuery(item.query ?? "");
+    setQuery("");
     setLocation("");
   }
 
@@ -686,7 +703,7 @@ export default function HomePage() {
             <button
               key={item.key}
               type="button"
-              className={category === item.value && (item.query ? query === item.query : !query) ? "category-lux active" : "category-lux"}
+              className={category === item.value && !query ? "category-lux active" : "category-lux"}
               onClick={() => selectCategory(item)}
             >
               <i className={`bi ${item.icon}`} />
@@ -765,7 +782,7 @@ export default function HomePage() {
                   <p>
                     <i className="bi bi-geo-alt-fill" />
                     {property.location}
-                    <span>{property.category}</span>
+                    <span>{categoryLabels[property.category]}</span>
                   </p>
                   <div className="prop-details-row">
                     {property.details.map((detail) => (
@@ -945,10 +962,12 @@ export default function HomePage() {
                 <input value={listingForm.phone} onChange={(event) => setListingForm({ ...listingForm, phone: event.target.value })} placeholder="Phone / WhatsApp number" required />
                 <select value={listingForm.propertyType} onChange={(event) => setListingForm({ ...listingForm, propertyType: event.target.value })}>
                   <option value="PG">PG</option>
-                  <option value="Hostel">Hostel</option>
-                  <option value="Rental Room">Rental Room</option>
-                  <option value="Flat">Flat</option>
+                  <option value="Girls PG">Girls PG</option>
+                  <option value="Boys PG">Boys PG</option>
+                  <option value="Rental Room">Rooms</option>
+                  <option value="Flat">Flats</option>
                   <option value="Homestay">Homestay</option>
+                  <option value="Hostel">Hostel</option>
                   <option value="Hotel">Hotel</option>
                   <option value="Guest House">Guest House</option>
                 </select>

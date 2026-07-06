@@ -225,9 +225,12 @@ export default function EditPropertyPage() {
             <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short listing description" />
             <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
               <option value="PG">PG</option>
-              <option value="HOMESTAY">Homestay</option>
-              <option value="FLAT">Flat</option>
+              <option value="GIRLS_PG">Girls PG</option>
+              <option value="BOYS_PG">Boys PG</option>
               <option value="ROOM">Room</option>
+              <option value="FLAT">Flat</option>
+              <option value="HOMESTAY">Homestay</option>
+              <option value="HOSTEL">Hostel</option>
             </select>
             <input value={form.rentMonthly} onChange={(e) => setForm({ ...form, rentMonthly: e.target.value })} placeholder={form.category === "HOMESTAY" ? "Daily rate" : "Monthly rent"} />
             <input value={form.depositAmount} onChange={(e) => setForm({ ...form, depositAmount: e.target.value })} placeholder="Deposit amount" />

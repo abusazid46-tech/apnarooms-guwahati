@@ -71,7 +71,7 @@ export default function HomeScreen() {
           <CategoryGrid
             onSelect={(item) => {
               setCategory(item.category);
-              setQuery(item.query ?? "");
+              setQuery("");
               setLocality("");
             }}
           />

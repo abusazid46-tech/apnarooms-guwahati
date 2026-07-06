@@ -11,7 +11,7 @@ export type BackendProperty = {
   title: string;
   slug?: string | null;
   description?: string | null;
-  category: "PG" | "HOMESTAY" | "FLAT" | "ROOM";
+  category: "PG" | "GIRLS_PG" | "BOYS_PG" | "ROOM" | "FLAT" | "HOMESTAY" | "HOSTEL";
   status: "DRAFT" | "PUBLISHED" | "UNPUBLISHED" | "ARCHIVED";
   rentMonthly: number;
   depositAmount?: number | null;
@@ -35,6 +35,18 @@ export type BackendBooking = {
   createdAt: string;
 };
 
+export type BackendLead = {
+  id: string;
+  name?: string | null;
+  phone?: string | null;
+  email?: string | null;
+  message?: string | null;
+  source?: string | null;
+  status: "NEW" | "CONTACTED" | "VISIT_SCHEDULED" | "VISIT_COMPLETED" | "NEGOTIATION" | "TOKEN_PAID" | "MOVED_IN" | "LOST";
+  property?: Pick<BackendProperty, "id" | "title" | "locality" | "rentMonthly"> | null;
+  createdAt: string;
+};
+
 export type BackendCoupon = {
   id: string;
   code: string;
@@ -45,4 +57,4 @@ export type BackendCoupon = {
   expiresAt?: string | null;
 };
 
-export type PropertyCategory = "all" | "PG" | "HOMESTAY" | "FLAT" | "ROOM";
+export type PropertyCategory = "all" | "PG" | "GIRLS_PG" | "BOYS_PG" | "ROOM" | "FLAT" | "HOMESTAY" | "HOSTEL";

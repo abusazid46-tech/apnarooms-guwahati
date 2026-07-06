@@ -3,7 +3,7 @@
     "name": "ApnaRooms Tenant",
     "slug": "apnarooms-tenant",
     "scheme": "apnaroomstenant",
-    "version": "1.0.0",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/brand/apnarooms-icon.jpeg",
     "userInterfaceStyle": "light",
@@ -17,6 +17,7 @@
     ],
     "android": {
       "package": "com.apnarooms.tenant",
+      "versionCode": 3,
       "adaptiveIcon": {
         "foregroundImage": "./assets/brand/apnarooms-icon.jpeg",
         "backgroundColor": "#5B55B7"
@@ -34,7 +35,12 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiBaseUrl": "https://darkred-coyote-647666.hostingersite.com/api"
-    }
+      "apiBaseUrl": "https://darkred-coyote-647666.hostingersite.com/api",
+      "router": {},
+      "eas": {
+        "projectId": "a3d1c154-7b19-4503-81b0-a3f652d727be"
+      }
+    },
+    "owner": "agent22"
   }
 }

@@ -43,6 +43,30 @@ function normalizeProperty(property: Partial<BackendProperty>): BackendProperty 
   };
 }
 
+function propertySearchText(property: BackendProperty) {
+  return [
+    property.title,
+    property.description ?? "",
+    property.locality,
+    property.city,
+    property.address ?? "",
+    ...property.amenities
+  ].join(" ").toLowerCase();
+}
+
+function matchesCategoryFilter(property: BackendProperty, selectedCategory: PropertyCategory) {
+  if (selectedCategory === "all") return true;
+  if (selectedCategory === "PG") return ["PG", "GIRLS_PG", "BOYS_PG"].includes(property.category);
+  if (property.category === selectedCategory) return true;
+
+  const text = propertySearchText(property);
+  if (selectedCategory === "GIRLS_PG") return property.category === "PG" && /\b(girl|girls|female|women|ladies)\b/.test(text);
+  if (selectedCategory === "BOYS_PG") return property.category === "PG" && /\b(boy|boys|male|men|gents)\b/.test(text);
+  if (selectedCategory === "HOSTEL") return /\bhostel\b/.test(text);
+  if (selectedCategory === "ROOM") return /\b(room|rooms|rental room)\b/.test(text);
+  return false;
+}
+
 export function useProperties() {
   const [properties, setProperties] = useState<BackendProperty[]>([]);
   const [loading, setLoading] = useState(true);
@@ -72,14 +96,12 @@ export function useProperties() {
   const filtered = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return properties.filter((property) => {
-      const categoryMatch = category === "all" || property.category === category;
+      const categoryMatch = matchesCategoryFilter(property, category);
       const localityMatch = !locality || property.locality === locality;
+      const searchText = propertySearchText(property);
       const queryMatch =
         !normalized ||
-        property.title.toLowerCase().includes(normalized) ||
-        property.locality.toLowerCase().includes(normalized) ||
-        property.address?.toLowerCase().includes(normalized) ||
-        property.amenities.some((item) => item.toLowerCase().includes(normalized));
+        searchText.includes(normalized);
 
       return categoryMatch && localityMatch && queryMatch;
     });
