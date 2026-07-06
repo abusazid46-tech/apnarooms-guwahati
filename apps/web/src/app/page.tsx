@@ -12,6 +12,7 @@ type PropertyCategory = BackendProperty["category"];
 type Property = {
   id: string;
   name: string;
+  description: string;
   location: string;
   locality: string;
   price: number;
@@ -67,6 +68,16 @@ const categoryLabels: Record<PropertyCategory, string> = {
   FLAT: "Flats",
   HOMESTAY: "Homestay",
   HOSTEL: "Hostel"
+};
+
+const categorySearchTerms: Record<PropertyCategory, string[]> = {
+  PG: ["pg", "paying guest"],
+  GIRLS_PG: ["girls pg", "girl pg", "female pg", "women pg", "ladies pg", "girls hostel"],
+  BOYS_PG: ["boys pg", "boy pg", "male pg", "men pg", "gents pg", "boys hostel"],
+  ROOM: ["room", "rooms", "rental room", "single room"],
+  FLAT: ["flat", "flats", "apartment", "apartments"],
+  HOMESTAY: ["homestay", "home stay", "daily stay"],
+  HOSTEL: ["hostel", "hostels"]
 };
 
 const defaultLocalities = ["Beltola", "Ganeshguri", "Six Mile", "GS Road", "Panjabari", "Kahilipara"];
@@ -142,6 +153,7 @@ function mapBackendProperty(property: BackendProperty): Property {
   return {
     id: property.id,
     name: property.title,
+    description: property.description ?? "",
     location: property.address ?? property.locality,
     locality: property.locality,
     price: property.rentMonthly,
@@ -150,13 +162,29 @@ function mapBackendProperty(property: BackendProperty): Property {
     available: property.isAvailable,
     category: property.category,
     billingUnit: property.category === "HOMESTAY" ? "day" : "month",
-    details: property.amenities.length ? property.amenities : [property.category, property.isAvailable ? "Available" : "Reserved"],
+    details: property.amenities.length ? property.amenities : [categoryLabels[property.category], property.isAvailable ? "Available" : "Reserved"],
     images: normaliseImages(property.images.map((image) => image.url))
   };
 }
 
-function propertySearchText(property: Pick<Property, "name" | "location" | "locality" | "details">) {
-  return [property.name, property.location, property.locality, ...property.details].join(" ").toLowerCase();
+function propertySearchText(property: Pick<Property, "name" | "description" | "location" | "locality" | "category" | "details">) {
+  return [
+    property.name,
+    property.description,
+    property.location,
+    property.locality,
+    categoryLabels[property.category],
+    ...categorySearchTerms[property.category],
+    ...property.details
+  ].join(" ").toLowerCase();
+}
+
+function queryMatchesText(searchText: string, normalizedQuery: string) {
+  if (!normalizedQuery) return true;
+  if (searchText.includes(normalizedQuery)) return true;
+
+  const words = normalizedQuery.split(/\s+/).filter(Boolean);
+  return words.length > 1 && words.every((word) => searchText.includes(word));
 }
 
 function matchesCategoryFilter(property: Property, selectedCategory: "all" | PropertyCategory) {
@@ -342,7 +370,7 @@ export default function HomePage() {
       const searchText = propertySearchText(property);
       const matchesQuery =
         !normalized ||
-        searchText.includes(normalized) ||
+        queryMatchesText(searchText, normalized) ||
         property.price.toString().includes(normalized);
       const matchesLocation = !location || property.locality === location;
       const matchesMin = min === null || property.price >= min;

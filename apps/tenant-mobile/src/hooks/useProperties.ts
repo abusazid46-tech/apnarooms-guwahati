@@ -43,6 +43,26 @@ function normalizeProperty(property: Partial<BackendProperty>): BackendProperty 
   };
 }
 
+const categorySearchTerms: Record<Exclude<PropertyCategory, "all">, string[]> = {
+  PG: ["pg", "paying guest"],
+  GIRLS_PG: ["girls pg", "girl pg", "female pg", "women pg", "ladies pg", "girls hostel"],
+  BOYS_PG: ["boys pg", "boy pg", "male pg", "men pg", "gents pg", "boys hostel"],
+  ROOM: ["room", "rooms", "rental room", "single room"],
+  FLAT: ["flat", "flats", "apartment", "apartments"],
+  HOMESTAY: ["homestay", "home stay", "daily stay"],
+  HOSTEL: ["hostel", "hostels"]
+};
+
+const categoryLabels: Record<Exclude<PropertyCategory, "all">, string> = {
+  PG: "PG",
+  GIRLS_PG: "Girls PG",
+  BOYS_PG: "Boys PG",
+  ROOM: "Rooms",
+  FLAT: "Flats",
+  HOMESTAY: "Homestay",
+  HOSTEL: "Hostel"
+};
+
 function propertySearchText(property: BackendProperty) {
   return [
     property.title,
@@ -50,8 +70,18 @@ function propertySearchText(property: BackendProperty) {
     property.locality,
     property.city,
     property.address ?? "",
+    categoryLabels[property.category],
+    ...categorySearchTerms[property.category],
     ...property.amenities
   ].join(" ").toLowerCase();
+}
+
+function queryMatchesText(searchText: string, normalizedQuery: string) {
+  if (!normalizedQuery) return true;
+  if (searchText.includes(normalizedQuery)) return true;
+
+  const words = normalizedQuery.split(/\s+/).filter(Boolean);
+  return words.length > 1 && words.every((word) => searchText.includes(word));
 }
 
 function matchesCategoryFilter(property: BackendProperty, selectedCategory: PropertyCategory) {
@@ -101,7 +131,7 @@ export function useProperties() {
       const searchText = propertySearchText(property);
       const queryMatch =
         !normalized ||
-        searchText.includes(normalized);
+        queryMatchesText(searchText, normalized);
 
       return categoryMatch && localityMatch && queryMatch;
     });

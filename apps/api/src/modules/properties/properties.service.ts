@@ -35,6 +35,16 @@ type ImageInput = {
 
 const propertyCategories = new Set(["PG", "GIRLS_PG", "BOYS_PG", "ROOM", "FLAT", "HOMESTAY", "HOSTEL"]);
 
+const categorySearchTerms: Record<string, string[]> = {
+  PG: ["pg", "paying guest"],
+  GIRLS_PG: ["girls pg", "girl pg", "girls", "female pg", "female", "women pg", "women", "ladies pg", "ladies"],
+  BOYS_PG: ["boys pg", "boy pg", "boys", "male pg", "male", "men pg", "men", "gents pg", "gents"],
+  ROOM: ["room", "rooms", "rental room", "single room"],
+  FLAT: ["flat", "flats", "apartment", "apartments"],
+  HOMESTAY: ["homestay", "home stay", "daily stay"],
+  HOSTEL: ["hostel", "hostels"]
+};
+
 const propertyInclude = {
   images: { orderBy: { sortOrder: "asc" as const } },
   landlord: {
@@ -79,6 +89,20 @@ function keywordWhere(words: string[]) {
   };
 }
 
+function matchingCategoriesForSearch(search: string) {
+  const normalized = search.toLowerCase().trim().replace(/\s+/g, " ");
+  if (!normalized) return [];
+
+  return Object.entries(categorySearchTerms)
+    .filter(([, terms]) =>
+      terms.some((term) => {
+        const normalizedTerm = term.toLowerCase();
+        return normalized === normalizedTerm || normalized.includes(normalizedTerm) || normalizedTerm.includes(normalized);
+      })
+    )
+    .map(([category]) => category);
+}
+
 function categoryWhere(category?: string) {
   if (!category) return {};
   if (category === "PG") return { category: { in: ["PG", "GIRLS_PG", "BOYS_PG"] } };
@@ -91,13 +115,16 @@ function categoryWhere(category?: string) {
 
 function searchWhere(search?: string) {
   if (!search) return {};
+  const matchingCategories = matchingCategoriesForSearch(search);
   return {
     OR: [
       { title: { contains: search, mode: "insensitive" as const } },
       { locality: { contains: search, mode: "insensitive" as const } },
       { city: { contains: search, mode: "insensitive" as const } },
       { address: { contains: search, mode: "insensitive" as const } },
-      { amenities: { has: search } }
+      { description: { contains: search, mode: "insensitive" as const } },
+      { amenities: { has: search } },
+      ...(matchingCategories.length ? [{ category: { in: matchingCategories } }] : [])
     ]
   };
 }
