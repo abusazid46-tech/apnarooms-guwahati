@@ -3,7 +3,7 @@
     "name": "ApnaRooms Tenant",
     "slug": "apnarooms-tenant",
     "scheme": "apnaroomstenant",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "portrait",
     "icon": "./assets/brand/apnarooms-icon.jpeg",
     "userInterfaceStyle": "light",
@@ -17,7 +17,7 @@
     ],
     "android": {
       "package": "com.apnarooms.tenant",
-      "versionCode": 3,
+      "versionCode": 4,
       "adaptiveIcon": {
         "foregroundImage": "./assets/brand/apnarooms-icon.jpeg",
         "backgroundColor": "#5B55B7"
