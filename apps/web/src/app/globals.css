@@ -1191,6 +1191,17 @@ a {
   gap: 18px;
 }
 
+.review-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) minmax(320px, 0.7fr);
+  gap: 20px;
+  align-items: start;
+}
+
+.review-layout .review-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .client-review-card {
   display: grid;
   gap: 16px;
@@ -1239,6 +1250,74 @@ a {
 .review-client-row small {
   color: var(--muted);
   font-weight: 800;
+}
+
+.review-submit-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 18px;
+  padding: 20px;
+  background: #fff;
+  box-shadow: var(--shadow-3d);
+}
+
+.review-submit-card > span {
+  color: var(--app-primary);
+  font-size: 0.78rem;
+  font-weight: 950;
+  text-transform: uppercase;
+}
+
+.review-submit-card h3 {
+  margin: 0;
+  color: var(--blue-deep);
+}
+
+.review-submit-card input,
+.review-submit-card select,
+.review-submit-card textarea {
+  width: 100%;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 14px;
+  padding: 0.85rem 0.95rem;
+  background: #f8fafc;
+  color: var(--blue-ink);
+  font: inherit;
+  font-weight: 750;
+}
+
+.review-submit-card textarea {
+  min-height: 118px;
+  resize: vertical;
+}
+
+.review-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.review-form-message {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.review-submit-card button {
+  border: 0;
+  border-radius: 16px;
+  padding: 0.95rem 1.1rem;
+  background: var(--app-primary);
+  color: #fff;
+  font-weight: 950;
+  cursor: pointer;
+}
+
+.review-submit-card button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .coupon-section {
@@ -2665,6 +2744,10 @@ a {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .review-layout {
+    grid-template-columns: 1fr;
+  }
+
   .category-scroll {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -2739,6 +2822,8 @@ a {
   .dashboard-stat-grid,
   .offer-form-grid,
   .owner-property-form,
+  .review-form-grid,
+  .review-grid,
   .lead-row,
   .admin-sidebar nav,
   .locality-grid {

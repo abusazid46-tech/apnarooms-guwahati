@@ -66,15 +66,15 @@ export default function ProfileScreen() {
           ))}
         </View>
 
-        <View style={styles.reviewCard}>
+        <TouchableOpacity style={styles.reviewCard} onPress={() => WebBrowser.openBrowserAsync(`${env.webUrl}/#reviews`)}>
           <View style={styles.reviewStars}>
             {[0, 1, 2, 3, 4].map((item) => (
               <Ionicons key={item} name="star" size={15} color={colors.accent} />
             ))}
           </View>
-          <Text style={styles.reviewText}>The team called back after I sent a request and helped me schedule a visit the same day.</Text>
-          <Text style={styles.reviewName}>Ritupan, Ganeshguri</Text>
-        </View>
+          <Text style={styles.reviewText}>Customer reviews are submitted from the property page and published only after admin approval.</Text>
+          <Text style={styles.reviewName}>Open approved reviews</Text>
+        </TouchableOpacity>
 
         <TouchableOpacity style={[styles.action, styles.secondary]} onPress={() => WebBrowser.openBrowserAsync(`${env.webUrl}/login`)}>
           <Ionicons name="log-in" size={20} color={colors.primary} />

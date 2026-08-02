@@ -1,21 +1,33 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { AppScreen } from "@/components/AppScreen";
 import { EmptyState } from "@/components/EmptyState";
 import { useProperties } from "@/hooks/useProperties";
 import { createBookingRequest } from "@/services/bookingRequests";
 import { openPropertyCheckout, openWhatsAppBooking } from "@/services/payments";
+import { createReview, listReviews } from "@/services/reviews";
 import { colors } from "@/theme/colors";
-import { useState } from "react";
+import type { BackendReview } from "@/types/api";
 
 export default function PropertyDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { properties, loading } = useProperties();
   const [form, setForm] = useState({ name: "", phone: "", email: "", message: "" });
   const [submitting, setSubmitting] = useState(false);
+  const [reviews, setReviews] = useState<BackendReview[]>([]);
+  const [reviewForm, setReviewForm] = useState({ name: "", phone: "", email: "", rating: 5, body: "" });
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const property = properties.find((item) => item.id === id);
+
+  useEffect(() => {
+    if (!id) return;
+    listReviews(id)
+      .then((result) => setReviews(result.reviews))
+      .catch(() => setReviews([]));
+  }, [id]);
 
   if (loading) {
     return (
@@ -57,6 +69,33 @@ export default function PropertyDetailScreen() {
       Alert.alert("Could not send request", error instanceof Error ? error.message : "Please try again.");
     } finally {
       setSubmitting(false);
+    }
+  }
+
+  async function submitReview() {
+    if (!property) return;
+
+    if (!reviewForm.name.trim() || !reviewForm.body.trim()) {
+      Alert.alert("Review needed", "Add your name and actual experience before submitting.");
+      return;
+    }
+
+    setReviewSubmitting(true);
+    try {
+      await createReview({
+        propertyId: property.id,
+        name: reviewForm.name.trim(),
+        phone: reviewForm.phone.trim() || undefined,
+        email: reviewForm.email.trim() || undefined,
+        rating: reviewForm.rating,
+        body: reviewForm.body.trim()
+      });
+      setReviewForm({ name: "", phone: "", email: "", rating: 5, body: "" });
+      Alert.alert("Review submitted", "Thank you. Your review will appear after admin approval.");
+    } catch (error) {
+      Alert.alert("Could not submit review", error instanceof Error ? error.message : "Please try again.");
+    } finally {
+      setReviewSubmitting(false);
     }
   }
 
@@ -127,14 +166,72 @@ export default function PropertyDetailScreen() {
           </View>
 
           <View style={styles.reviewBox}>
-            <View style={styles.reviewHead}>
-              <View style={styles.reviewAvatar}><Text style={styles.reviewInitial}>A</Text></View>
-              <View style={styles.reviewMeta}>
-                <Text style={styles.reviewName}>Ankita, Six Mile</Text>
-                <Text style={styles.reviewRating}>5.0 rating after PG visit</Text>
+            <Text style={styles.boxTitle}>Customer reviews</Text>
+            {reviews.length ? reviews.map((review) => (
+              <View style={styles.reviewItem} key={review.id}>
+                <View style={styles.reviewHead}>
+                  <View style={styles.reviewAvatar}><Text style={styles.reviewInitial}>{review.name.slice(0, 1).toUpperCase()}</Text></View>
+                  <View style={styles.reviewMeta}>
+                    <Text style={styles.reviewName}>{review.name}</Text>
+                    <Text style={styles.reviewRating}>{review.rating.toFixed(1)} rating</Text>
+                  </View>
+                </View>
+                <Text style={styles.reviewText}>{review.body}</Text>
               </View>
+            )) : (
+              <Text style={styles.reviewText}>Approved reviews for this property will appear here.</Text>
+            )}
+            <View style={styles.reviewForm}>
+              <Text style={styles.boxTitle}>Share your experience</Text>
+              <TextInput
+                value={reviewForm.name}
+                onChangeText={(name) => setReviewForm((current) => ({ ...current, name }))}
+                placeholder="Your name"
+                placeholderTextColor="#9CA3AF"
+                style={styles.input}
+              />
+              <TextInput
+                value={reviewForm.phone}
+                onChangeText={(phone) => setReviewForm((current) => ({ ...current, phone }))}
+                placeholder="+91 phone optional"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="phone-pad"
+                style={styles.input}
+              />
+              <TextInput
+                value={reviewForm.email}
+                onChangeText={(email) => setReviewForm((current) => ({ ...current, email }))}
+                placeholder="Email optional"
+                placeholderTextColor="#9CA3AF"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                style={styles.input}
+              />
+              <View style={styles.ratingRow}>
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <TouchableOpacity
+                    key={rating}
+                    style={[styles.ratingButton, reviewForm.rating === rating && styles.ratingButtonActive]}
+                    onPress={() => setReviewForm((current) => ({ ...current, rating }))}
+                  >
+                    <Ionicons name="star" size={15} color={reviewForm.rating >= rating ? colors.accent : colors.muted} />
+                    <Text style={[styles.ratingButtonText, reviewForm.rating === rating && styles.ratingButtonTextActive]}>{rating}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TextInput
+                value={reviewForm.body}
+                onChangeText={(body) => setReviewForm((current) => ({ ...current, body }))}
+                placeholder="Write your actual visit, stay, booking, or support experience"
+                placeholderTextColor="#9CA3AF"
+                multiline
+                style={[styles.input, styles.noteInput]}
+              />
+              <TouchableOpacity style={styles.reviewSubmitButton} onPress={submitReview} disabled={reviewSubmitting}>
+                <Ionicons name="star" size={18} color="#fff" />
+                <Text style={styles.actionText}>{reviewSubmitting ? "Submitting..." : "Submit Review"}</Text>
+              </TouchableOpacity>
             </View>
-            <Text style={styles.reviewText}>The listing details helped me ask the right questions before visiting. Support checked once after I moved in.</Text>
           </View>
 
           <View style={styles.actions}>
@@ -321,6 +418,12 @@ const styles = StyleSheet.create({
     padding: 16,
     backgroundColor: colors.surface
   },
+  reviewItem: {
+    gap: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ECEBFF",
+    paddingBottom: 12
+  },
   reviewHead: {
     flexDirection: "row",
     alignItems: "center",
@@ -355,5 +458,45 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 21,
     fontWeight: "600"
+  },
+  reviewForm: {
+    gap: 10,
+    marginTop: 4
+  },
+  ratingRow: {
+    flexDirection: "row",
+    gap: 8
+  },
+  ratingButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 4,
+    minHeight: 42,
+    borderWidth: 1,
+    borderColor: colors.line,
+    borderRadius: 13,
+    backgroundColor: "#fff"
+  },
+  ratingButtonActive: {
+    borderColor: colors.accent,
+    backgroundColor: "#FFF7E8"
+  },
+  ratingButtonText: {
+    color: colors.muted,
+    fontWeight: "900"
+  },
+  ratingButtonTextActive: {
+    color: colors.ink
+  },
+  reviewSubmitButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    minHeight: 50,
+    borderRadius: 16,
+    backgroundColor: colors.primary
   }
 });

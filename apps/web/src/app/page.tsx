@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { apiFetch, apiPost } from "@/lib/api";
 import { loadRazorpayCheckout } from "@/lib/razorpay";
 import { useAuth } from "@/hooks/useAuth";
-import type { BackendBooking, BackendProperty } from "@/types/api";
+import type { BackendBooking, BackendProperty, BackendReview } from "@/types/api";
 
 type PropertyCategory = BackendProperty["category"];
 
@@ -82,30 +82,6 @@ const categorySearchTerms: Record<PropertyCategory, string[]> = {
 
 const defaultLocalities = ["Beltola", "Ganeshguri", "Six Mile", "GS Road", "Panjabari", "Kahilipara"];
 
-const clientReviews = [
-  {
-    name: "Ritupan Deka",
-    role: "Working professional",
-    locality: "Ganeshguri",
-    rating: 5,
-    text: "I moved from Jorhat and needed a clean room fast. The ApnaRooms team shared real photos, confirmed the owner call, and helped me book without brokerage."
-  },
-  {
-    name: "Ankita Sharma",
-    role: "Student",
-    locality: "Six Mile",
-    rating: 5,
-    text: "The girls PG filter saved time. I could compare food, curfew and rent before visiting, and the support person followed up after I shifted."
-  },
-  {
-    name: "Nayan Kalita",
-    role: "Parent",
-    locality: "Beltola",
-    rating: 4,
-    text: "We used ApnaRooms for my brother's hostel search. Listings were practical, phone support was quick, and the final place matched what was shown."
-  }
-];
-
 const initialListingForm = {
   ownerName: "",
   phone: "",
@@ -120,6 +96,15 @@ const initialListingForm = {
   rooms: "",
   amenities: "",
   description: ""
+};
+
+const initialReviewForm = {
+  name: "",
+  phone: "",
+  email: "",
+  rating: "5",
+  propertyId: "",
+  body: ""
 };
 
 declare global {
@@ -335,6 +320,10 @@ export default function HomePage() {
   const [publicCoupons, setPublicCoupons] = useState<PublicCoupon[]>([]);
   const [couponStatus, setCouponStatus] = useState("");
   const [checkoutMessage, setCheckoutMessage] = useState("");
+  const [reviews, setReviews] = useState<BackendReview[]>([]);
+  const [reviewForm, setReviewForm] = useState(initialReviewForm);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewMessage, setReviewMessage] = useState("");
 
   useEffect(() => {
     try {
@@ -361,6 +350,10 @@ export default function HomePage() {
     apiFetch<{ coupons: PublicCoupon[] }>("/coupons")
       .then((result) => setPublicCoupons(result.coupons))
       .catch(() => setPublicCoupons([]));
+
+    apiFetch<{ reviews: BackendReview[] }>("/reviews?limit=12")
+      .then((result) => setReviews(result.reviews))
+      .catch(() => setReviews([]));
   }, []);
 
   useEffect(() => {
@@ -458,6 +451,35 @@ export default function HomePage() {
     } catch (error) {
       setActiveCoupon(null);
       setCouponStatus(error instanceof Error ? error.message : "Invalid or expired coupon.");
+    }
+  }
+
+  async function submitReview(event: FormEvent) {
+    event.preventDefault();
+    setReviewMessage("");
+
+    if (!reviewForm.name.trim() || !reviewForm.body.trim()) {
+      setReviewMessage("Please add your name and review before submitting.");
+      return;
+    }
+
+    setReviewSubmitting(true);
+    try {
+      await apiPost("/reviews", {
+        name: reviewForm.name.trim(),
+        phone: reviewForm.phone.trim() || undefined,
+        email: reviewForm.email.trim() || undefined,
+        rating: Number(reviewForm.rating),
+        body: reviewForm.body.trim(),
+        propertyId: reviewForm.propertyId || undefined,
+        source: "website"
+      });
+      setReviewForm(initialReviewForm);
+      setReviewMessage("Thank you. Your review is saved and will appear after admin approval.");
+    } catch (error) {
+      setReviewMessage(error instanceof Error ? error.message : "Could not submit review. Please try again.");
+    } finally {
+      setReviewSubmitting(false);
     }
   }
 
@@ -913,29 +935,68 @@ export default function HomePage() {
       <section className="tenant-container review-section" id="reviews">
         <div className="listing-meta">
           <div>
-            <span>Client Reviews</span>
-            <h2>Real stories from tenants who found a stay</h2>
-            <p className="api-notice">Short, practical feedback from people using ApnaRooms around Guwahati.</p>
+            <span>Customer Reviews</span>
+            <h2>Real reviews from tenants and visitors</h2>
+            <p className="api-notice">Approved customer feedback submitted from the website and tenant app.</p>
           </div>
         </div>
-        <div className="review-grid">
-          {clientReviews.map((review) => (
-            <article className="client-review-card" key={review.name}>
-              <div className="review-stars" aria-label={`${review.rating} star review`}>
-                {Array.from({ length: 5 }).map((_, index) => (
-                  <i key={index} className={`bi ${index < review.rating ? "bi-star-fill" : "bi-star"}`} />
-                ))}
-              </div>
-              <p>&quot;{review.text}&quot;</p>
-              <div className="review-client-row">
-                <span>{review.name.slice(0, 1)}</span>
-                <div>
-                  <strong>{review.name}</strong>
-                  <small>{review.role} - {review.locality}</small>
+        <div className="review-layout">
+          <div className="review-grid">
+            {reviews.length ? reviews.map((review) => (
+              <article className="client-review-card" key={review.id}>
+                <div className="review-stars" aria-label={`${review.rating} star review`}>
+                  {Array.from({ length: 5 }).map((_, index) => (
+                    <i key={index} className={`bi ${index < review.rating ? "bi-star-fill" : "bi-star"}`} />
+                  ))}
                 </div>
-              </div>
-            </article>
-          ))}
+                <p>&quot;{review.body}&quot;</p>
+                <div className="review-client-row">
+                  <span>{review.name.slice(0, 1).toUpperCase()}</span>
+                  <div>
+                    <strong>{review.name}</strong>
+                    <small>{review.property ? `${review.property.title} - ${review.property.locality}` : "ApnaRooms customer"}</small>
+                  </div>
+                </div>
+              </article>
+            )) : (
+              <article className="client-review-card">
+                <div className="review-stars" aria-label="No approved reviews yet">
+                  {Array.from({ length: 5 }).map((_, index) => <i key={index} className="bi bi-star" />)}
+                </div>
+                <p>Customer reviews will appear here after admin approval.</p>
+                <div className="review-client-row">
+                  <span>AR</span>
+                  <div>
+                    <strong>ApnaRooms</strong>
+                    <small>Awaiting approved reviews</small>
+                  </div>
+                </div>
+              </article>
+            )}
+          </div>
+          <form className="review-submit-card" onSubmit={submitReview}>
+            <span>Share your experience</span>
+            <h3>Submit a customer review</h3>
+            <div className="review-form-grid">
+              <input value={reviewForm.name} onChange={(event) => setReviewForm({ ...reviewForm, name: event.target.value })} placeholder="Your name" required />
+              <select value={reviewForm.rating} onChange={(event) => setReviewForm({ ...reviewForm, rating: event.target.value })} aria-label="Rating">
+                <option value="5">5 stars</option>
+                <option value="4">4 stars</option>
+                <option value="3">3 stars</option>
+                <option value="2">2 stars</option>
+                <option value="1">1 star</option>
+              </select>
+              <input value={reviewForm.phone} onChange={(event) => setReviewForm({ ...reviewForm, phone: event.target.value })} placeholder="Phone optional" />
+              <input value={reviewForm.email} onChange={(event) => setReviewForm({ ...reviewForm, email: event.target.value })} placeholder="Email optional" type="email" />
+            </div>
+            <select value={reviewForm.propertyId} onChange={(event) => setReviewForm({ ...reviewForm, propertyId: event.target.value })}>
+              <option value="">General ApnaRooms review</option>
+              {properties.map((property) => <option key={property.id} value={property.id}>{property.name} - {property.locality}</option>)}
+            </select>
+            <textarea value={reviewForm.body} onChange={(event) => setReviewForm({ ...reviewForm, body: event.target.value })} placeholder="Write your actual stay, visit, booking, or support experience" required />
+            {reviewMessage ? <p className="review-form-message">{reviewMessage}</p> : null}
+            <button type="submit" disabled={reviewSubmitting}>{reviewSubmitting ? "Submitting..." : "Submit Review"}</button>
+          </form>
         </div>
       </section>
 

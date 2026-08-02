@@ -57,6 +57,12 @@ enum LeadStatus {
   LOST
 }
 
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 enum CouponType {
   PERCENT
   FLAT
@@ -108,6 +114,7 @@ model Property {
   images         PropertyImage[]
   bookings       Booking[]
   leads          Lead[]
+  reviews        Review[]
   notes          AdminNote[]
 
   @@index([status, category])
@@ -181,6 +188,26 @@ model Lead {
 
   @@index([status])
   @@index([propertyId])
+}
+
+model Review {
+  id         String       @id @default(cuid())
+  propertyId String?
+  name       String
+  phone      String?
+  email      String?
+  rating     Int
+  body       String
+  source     String?      @default("website")
+  status     ReviewStatus @default(PENDING)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  property   Property?    @relation(fields: [propertyId], references: [id])
+
+  @@index([status])
+  @@index([propertyId])
+  @@index([createdAt])
 }
 
 model Coupon {

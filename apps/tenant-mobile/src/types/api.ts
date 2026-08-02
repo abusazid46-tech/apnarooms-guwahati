@@ -47,6 +47,21 @@ export type BackendLead = {
   createdAt: string;
 };
 
+export type BackendReview = {
+  id: string;
+  propertyId?: string | null;
+  name: string;
+  phone?: string | null;
+  email?: string | null;
+  rating: number;
+  body: string;
+  source?: string | null;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  property?: Pick<BackendProperty, "id" | "title" | "locality" | "rentMonthly"> | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type BackendCoupon = {
   id: string;
   code: string;

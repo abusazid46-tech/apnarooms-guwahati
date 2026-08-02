@@ -2,6 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { AppScreen } from "@/components/AppScreen";
 import { CategoryGrid } from "@/components/CategoryGrid";
@@ -11,28 +12,9 @@ import { SectionHeader } from "@/components/SectionHeader";
 import { defaultLocalities } from "@/data/categories";
 import { useProperties } from "@/hooks/useProperties";
 import { openWhatsAppBooking } from "@/services/payments";
+import { listReviews } from "@/services/reviews";
 import { colors, shadow } from "@/theme/colors";
-
-const clientReviews = [
-  {
-    name: "Ankita",
-    locality: "Six Mile",
-    text: "Girls PG options were easy to compare. The photos and rent details matched when I visited.",
-    rating: "5.0"
-  },
-  {
-    name: "Ritupan",
-    locality: "Ganeshguri",
-    text: "Booked a room after one owner call. No brokerage and the team followed up on move-in day.",
-    rating: "4.8"
-  },
-  {
-    name: "Nayan",
-    locality: "Beltola",
-    text: "Good support for hostel search. The app made shortlisting much faster for my family.",
-    rating: "4.7"
-  }
-];
+import type { BackendReview } from "@/types/api";
 
 export default function HomeScreen() {
   const {
@@ -49,6 +31,13 @@ export default function HomeScreen() {
 
   const popularLocalities = (localities.length ? localities : defaultLocalities).slice(0, 6);
   const featured = filtered.find((item) => item.images?.[0]) ?? filtered[0];
+  const [reviews, setReviews] = useState<BackendReview[]>([]);
+
+  useEffect(() => {
+    listReviews()
+      .then((result) => setReviews(result.reviews))
+      .catch(() => setReviews([]));
+  }, []);
 
   return (
     <AppScreen>
@@ -132,13 +121,19 @@ export default function HomeScreen() {
             <EmptyState title="No live properties" body={error || "Add approved properties from admin to show them in the app."} />
           )}
 
-          <SectionHeader title="Client reviews" eyebrow="Trusted by tenants" icon="star" />
+          <SectionHeader title="Customer reviews" eyebrow="Approved feedback" icon="star" />
           <FlatList
             horizontal
-            data={clientReviews}
-            keyExtractor={(item) => item.name}
+            data={reviews}
+            keyExtractor={(item) => item.id}
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.reviewList}
+            ListEmptyComponent={(
+              <View style={styles.reviewCard}>
+                <Text style={styles.reviewName}>No approved reviews yet</Text>
+                <Text style={styles.reviewText}>Customer reviews appear here after admin approval.</Text>
+              </View>
+            )}
             renderItem={({ item }) => (
               <View style={styles.reviewCard}>
                 <View style={styles.reviewHead}>
@@ -147,14 +142,14 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.reviewMeta}>
                     <Text style={styles.reviewName}>{item.name}</Text>
-                    <Text style={styles.reviewLocality}>{item.locality}</Text>
+                    <Text style={styles.reviewLocality}>{item.property ? `${item.property.title}, ${item.property.locality}` : "ApnaRooms customer"}</Text>
                   </View>
                   <View style={styles.ratingPill}>
                     <Ionicons name="star" size={13} color={colors.accent} />
-                    <Text style={styles.ratingText}>{item.rating}</Text>
+                    <Text style={styles.ratingText}>{item.rating.toFixed(1)}</Text>
                   </View>
                 </View>
-                <Text style={styles.reviewText}>{item.text}</Text>
+                <Text style={styles.reviewText}>{item.body}</Text>
               </View>
             )}
           />

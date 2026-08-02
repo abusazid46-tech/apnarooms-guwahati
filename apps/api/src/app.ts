@@ -9,6 +9,7 @@ import { paymentsRoutes } from "./modules/payments/payments.routes.js";
 import { webhookRoutes } from "./modules/payments/webhook.routes.js";
 import { notificationsRoutes } from "./modules/notifications/notifications.routes.js";
 import { propertiesRoutes } from "./modules/properties/properties.routes.js";
+import { reviewsRoutes } from "./modules/reviews/reviews.routes.js";
 import { uploadsRoutes } from "./modules/uploads/uploads.routes.js";
 import { usersRoutes } from "./modules/users/users.routes.js";
 import { env } from "./config/env.js";
@@ -53,6 +54,7 @@ export function createApp() {
   app.use("/api/bookings", bookingsRoutes);
   app.use("/api/payments", paymentsRoutes);
   app.use("/api/leads", leadsRoutes);
+  app.use("/api/reviews", reviewsRoutes);
   app.use("/api/coupons", couponsRoutes);
   app.use("/api/notifications", notificationsRoutes);
   app.use("/api/uploads", uploadsRoutes);
