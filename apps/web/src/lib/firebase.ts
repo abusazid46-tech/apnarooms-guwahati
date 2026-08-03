@@ -2,12 +2,19 @@ import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
 import type { Auth } from "firebase/auth";
 import type { FirebaseStorage } from "firebase/storage";
 
+function cleanPublicEnv(value: string | undefined) {
+  const cleaned = value?.trim();
+  return cleaned || undefined;
+}
+
+const firebaseProjectId = cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
+  apiKey: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
+  authDomain: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) ?? (firebaseProjectId ? `${firebaseProjectId}.firebaseapp.com` : undefined),
+  projectId: firebaseProjectId,
+  storageBucket: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET),
+  appId: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_APP_ID)
 };
 
 let cachedApp: FirebaseApp | null = null;
