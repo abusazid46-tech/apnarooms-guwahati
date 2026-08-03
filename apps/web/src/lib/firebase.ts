@@ -7,14 +7,22 @@ function cleanPublicEnv(value: string | undefined) {
   return cleaned || undefined;
 }
 
-const firebaseProjectId = cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+const firebaseDefaults = {
+  apiKey: "AIzaSyDPnWksHuwKsSHQoLwR7I_fHLwgtCswFH4",
+  authDomain: "apnarooms-guwahati.firebaseapp.com",
+  projectId: "apnarooms-guwahati",
+  storageBucket: "apnarooms-guwahati.firebasestorage.app",
+  appId: "1:794053444845:web:8c254ca78b5d975c6878e4"
+};
+
+const firebaseProjectId = cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) ?? firebaseDefaults.projectId;
 
 const firebaseConfig = {
-  apiKey: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
-  authDomain: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) ?? (firebaseProjectId ? `${firebaseProjectId}.firebaseapp.com` : undefined),
+  apiKey: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_API_KEY) ?? firebaseDefaults.apiKey,
+  authDomain: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN) ?? firebaseDefaults.authDomain ?? (firebaseProjectId ? `${firebaseProjectId}.firebaseapp.com` : undefined),
   projectId: firebaseProjectId,
-  storageBucket: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET),
-  appId: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_APP_ID)
+  storageBucket: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET) ?? firebaseDefaults.storageBucket,
+  appId: cleanPublicEnv(process.env.NEXT_PUBLIC_FIREBASE_APP_ID) ?? firebaseDefaults.appId
 };
 
 let cachedApp: FirebaseApp | null = null;
