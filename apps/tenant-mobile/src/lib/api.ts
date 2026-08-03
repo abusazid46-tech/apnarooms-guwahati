@@ -2,6 +2,7 @@ import { env } from "@/config/env";
 
 const DEFAULT_API_BASE_URL = "https://darkred-coyote-647666.hostingersite.com/api";
 const RETRYABLE_STATUSES = new Set([502, 503, 504]);
+const PROXY_AUTH_HEADER_ERROR = "Missing auth token";
 
 export class ApiError extends Error {
   constructor(
@@ -44,11 +45,7 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
     response = await fetchFromBase(DEFAULT_API_BASE_URL);
   }
 
-  if (RETRYABLE_STATUSES.has(response.status) && env.apiBaseUrl !== DEFAULT_API_BASE_URL) {
-    response = await fetchFromBase(DEFAULT_API_BASE_URL);
-  }
-
-  const text = await response.text();
+  let text = await response.text();
   let body: unknown = null;
 
   if (text) {
@@ -56,6 +53,27 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
       body = JSON.parse(text);
     } catch {
       throw new ApiError("Server returned an invalid response. Please try again.", response.status);
+    }
+  }
+
+  const proxyMissedAuthHeader =
+    response.status === 401 &&
+    typeof body === "object" &&
+    body &&
+    "message" in body &&
+    body.message === PROXY_AUTH_HEADER_ERROR;
+
+  if (env.apiBaseUrl !== DEFAULT_API_BASE_URL && (RETRYABLE_STATUSES.has(response.status) || proxyMissedAuthHeader)) {
+    response = await fetchFromBase(DEFAULT_API_BASE_URL);
+    text = await response.text();
+    body = null;
+
+    if (text) {
+      try {
+        body = JSON.parse(text);
+      } catch {
+        throw new ApiError("Server returned an invalid response. Please try again.", response.status);
+      }
     }
   }
 

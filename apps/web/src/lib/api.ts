@@ -11,6 +11,7 @@ function normalizeApiBaseUrl(value: string) {
 const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL);
 const API_FALLBACK_BASE_URL = DEFAULT_API_BASE_URL;
 const RETRYABLE_STATUSES = new Set([502, 503, 504]);
+const PROXY_AUTH_HEADER_ERROR = "Missing auth token";
 
 export class ApiError extends Error {
   constructor(
@@ -57,12 +58,18 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
     response = await fetchFromBase(API_FALLBACK_BASE_URL);
   }
 
-  if (RETRYABLE_STATUSES.has(response.status) && API_BASE_URL !== API_FALLBACK_BASE_URL) {
-    response = await fetchFromBase(API_FALLBACK_BASE_URL);
-  }
+  let text = await response.text();
+  let body = text ? JSON.parse(text) : null;
 
-  const text = await response.text();
-  const body = text ? JSON.parse(text) : null;
+  const shouldRetryFallback =
+    API_BASE_URL !== API_FALLBACK_BASE_URL &&
+    (RETRYABLE_STATUSES.has(response.status) || (response.status === 401 && body?.message === PROXY_AUTH_HEADER_ERROR));
+
+  if (shouldRetryFallback) {
+    response = await fetchFromBase(API_FALLBACK_BASE_URL);
+    text = await response.text();
+    body = text ? JSON.parse(text) : null;
+  }
 
   if (!response.ok) {
     const issues = Array.isArray(body?.issues) ? body.issues : [];
