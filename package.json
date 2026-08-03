@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "turbo dev",
-    "build": "turbo build",
+    "build": "node scripts/hostinger-build.mjs",
     "hostinger:build": "node scripts/hostinger-build.mjs",
     "hostinger:start": "node server.js",
     "start": "node server.js",
