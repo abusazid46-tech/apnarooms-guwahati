@@ -39,11 +39,27 @@ function run(command, args, cwd, options = {}) {
   }
 }
 
+function ensureWorkspaceInstall() {
+  const requiredPaths = [
+    path.join(rootDir, "packages", "shared", "node_modules", "zod"),
+    path.join(rootDir, "packages", "db", "node_modules", ".bin", binName("prisma")),
+    path.join(rootDir, "apps", "web", "node_modules", ".bin", binName("next"))
+  ];
+
+  if (requiredPaths.every((requiredPath) => fs.existsSync(requiredPath))) {
+    return;
+  }
+
+  const corepack = isWindows ? "corepack.cmd" : "corepack";
+  run(corepack, ["pnpm", "install", "--frozen-lockfile"], rootDir, { shell: true });
+}
+
 const sharedDir = path.join(rootDir, "packages", "shared");
 const dbDir = path.join(rootDir, "packages", "db");
 const apiDir = path.join(rootDir, "apps", "api");
 const webDir = path.join(rootDir, "apps", "web");
 
+ensureWorkspaceInstall();
 run(localBin("tsc", sharedDir), [], sharedDir);
 run(localBin("prisma", dbDir), ["generate"], dbDir);
 run(localBin("tsc", dbDir), [], dbDir);
