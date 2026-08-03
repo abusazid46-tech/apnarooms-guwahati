@@ -18,6 +18,10 @@ const nextConfig: NextConfig = {
           {
             key: "Cross-Origin-Opener-Policy",
             value: "same-origin-allow-popups"
+          },
+          {
+            key: "Cache-Control",
+            value: "no-store"
           }
         ]
       }
