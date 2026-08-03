@@ -42,9 +42,11 @@ function run(command, args, cwd, options = {}) {
 const sharedDir = path.join(rootDir, "packages", "shared");
 const dbDir = path.join(rootDir, "packages", "db");
 const apiDir = path.join(rootDir, "apps", "api");
+const webDir = path.join(rootDir, "apps", "web");
 
 run(localBin("tsc", sharedDir), [], sharedDir);
 run(localBin("prisma", dbDir), ["generate"], dbDir);
 run(localBin("tsc", dbDir), [], dbDir);
 run(process.execPath, [path.join(apiDir, "scripts", "sync-db-if-possible.mjs")], apiDir, { shell: false });
 run(localBin("tsc", apiDir), [], apiDir);
+run(localBin("next", webDir), ["build"], webDir);
