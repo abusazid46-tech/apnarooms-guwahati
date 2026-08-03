@@ -49,4 +49,6 @@ run(localBin("prisma", dbDir), ["generate"], dbDir);
 run(localBin("tsc", dbDir), [], dbDir);
 run(process.execPath, [path.join(apiDir, "scripts", "sync-db-if-possible.mjs")], apiDir, { shell: false });
 run(localBin("tsc", apiDir), [], apiDir);
+process.env.NEXT_TELEMETRY_DISABLED ??= "1";
+process.env.NEXT_PRIVATE_BUILD_WORKER ??= "1";
 run(localBin("next", webDir), ["build"], webDir);
