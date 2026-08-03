@@ -9,6 +9,8 @@ function normalizeApiBaseUrl(value: string) {
 }
 
 const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL);
+const API_FALLBACK_BASE_URL = DEFAULT_API_BASE_URL;
+const RETRYABLE_STATUSES = new Set([502, 503, 504]);
 
 export class ApiError extends Error {
   constructor(
@@ -39,10 +41,25 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
   const tokenHeaders = await authHeaders(user);
   Object.entries(tokenHeaders).forEach(([key, value]) => requestHeaders.set(key, value));
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...rest,
-    headers: requestHeaders
-  });
+  const fetchFromBase = (baseUrl: string) =>
+    fetch(`${baseUrl}${path}`, {
+      ...rest,
+      headers: new Headers(requestHeaders)
+    });
+
+  let response: Response;
+  try {
+    response = await fetchFromBase(API_BASE_URL);
+  } catch (error) {
+    if (API_BASE_URL === API_FALLBACK_BASE_URL) {
+      throw error;
+    }
+    response = await fetchFromBase(API_FALLBACK_BASE_URL);
+  }
+
+  if (RETRYABLE_STATUSES.has(response.status) && API_BASE_URL !== API_FALLBACK_BASE_URL) {
+    response = await fetchFromBase(API_FALLBACK_BASE_URL);
+  }
 
   const text = await response.text();
   const body = text ? JSON.parse(text) : null;

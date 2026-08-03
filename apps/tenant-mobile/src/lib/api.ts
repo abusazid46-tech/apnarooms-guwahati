@@ -1,5 +1,8 @@
 import { env } from "@/config/env";
 
+const DEFAULT_API_BASE_URL = "https://darkred-coyote-647666.hostingersite.com/api";
+const RETRYABLE_STATUSES = new Set([502, 503, 504]);
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -25,10 +28,25 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
     requestHeaders.set("Authorization", `Bearer ${token}`);
   }
 
-  const response = await fetch(`${env.apiBaseUrl}${path}`, {
-    ...rest,
-    headers: requestHeaders
-  });
+  const fetchFromBase = (baseUrl: string) =>
+    fetch(`${baseUrl}${path}`, {
+      ...rest,
+      headers: new Headers(requestHeaders)
+    });
+
+  let response: Response;
+  try {
+    response = await fetchFromBase(env.apiBaseUrl);
+  } catch (error) {
+    if (env.apiBaseUrl === DEFAULT_API_BASE_URL) {
+      throw error;
+    }
+    response = await fetchFromBase(DEFAULT_API_BASE_URL);
+  }
+
+  if (RETRYABLE_STATUSES.has(response.status) && env.apiBaseUrl !== DEFAULT_API_BASE_URL) {
+    response = await fetchFromBase(DEFAULT_API_BASE_URL);
+  }
 
   const text = await response.text();
   let body: unknown = null;
