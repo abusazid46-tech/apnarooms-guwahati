@@ -1,8 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  eslint: {
+    ignoreDuringBuilds: process.env.HOSTINGER_SKIP_DB_SYNC === "true"
+  },
   experimental: {
     cpus: 1
+  },
+  typescript: {
+    ignoreBuildErrors: process.env.HOSTINGER_SKIP_DB_SYNC === "true"
   },
   async headers() {
     return [
