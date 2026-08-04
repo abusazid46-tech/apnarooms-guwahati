@@ -11,9 +11,13 @@ const next = webRequire("next");
 const port = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
 
 function loadEnvFile() {
-  const envPath = path.join(rootDir, ".env");
+  const envPath = [
+    process.env.HOSTINGER_SHARED_ENV_PATH,
+    path.join(rootDir, ".env"),
+    path.resolve(rootDir, "..", "..", "..", "nodejs", ".env"),
+  ].find((candidate) => candidate && fs.existsSync(candidate));
 
-  if (!fs.existsSync(envPath)) {
+  if (!envPath) {
     return;
   }
 
