@@ -21,6 +21,17 @@ function canRetryFallback(path: string, method: string) {
   return true;
 }
 
+function parseApiBody(text: string, status: number, path: string) {
+  if (!text) return null;
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    const preview = text.replace(/\s+/g, " ").trim().slice(0, 120);
+    throw new ApiError(`API returned non-JSON response for ${path}: ${status}${preview ? ` - ${preview}` : ""}`, status);
+  }
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -69,7 +80,7 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
   }
 
   let text = await response.text();
-  let body = text ? JSON.parse(text) : null;
+  let body = parseApiBody(text, response.status, path);
 
   const shouldRetryFallback =
     primaryApiBaseUrl !== API_FALLBACK_BASE_URL &&
@@ -79,7 +90,7 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
   if (shouldRetryFallback) {
     response = await fetchFromBase(API_FALLBACK_BASE_URL);
     text = await response.text();
-    body = text ? JSON.parse(text) : null;
+    body = parseApiBody(text, response.status, path);
   }
 
   if (!response.ok) {
