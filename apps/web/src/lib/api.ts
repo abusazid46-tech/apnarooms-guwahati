@@ -1,6 +1,7 @@
 import type { User } from "firebase/auth";
 
-const DEFAULT_API_BASE_URL = "https://darkred-coyote-647666.hostingersite.com/api";
+const DEFAULT_API_BASE_URL = "https://apnarooms.com/api";
+const FALLBACK_API_BASE_URL = "https://darkred-coyote-647666.hostingersite.com/api";
 
 function normalizeApiBaseUrl(value: string) {
   const trimmed = value.trim().replace(/\/+$/, "");
@@ -9,7 +10,7 @@ function normalizeApiBaseUrl(value: string) {
 }
 
 const API_BASE_URL = normalizeApiBaseUrl(process.env.NEXT_PUBLIC_API_BASE_URL ?? DEFAULT_API_BASE_URL);
-const API_FALLBACK_BASE_URL = DEFAULT_API_BASE_URL;
+const API_FALLBACK_BASE_URL = FALLBACK_API_BASE_URL;
 const RETRYABLE_STATUSES = new Set([502, 503, 504]);
 const PROXY_AUTH_HEADER_ERROR = "Missing auth token";
 
