@@ -1,6 +1,7 @@
 import type { User } from "firebase/auth";
 
 const DEFAULT_API_BASE_URL = "https://apnarooms.com/api";
+const SAME_ORIGIN_API_BASE_URL = "/api";
 const FALLBACK_API_BASE_URL = "https://darkred-coyote-647666.hostingersite.com/api";
 
 function normalizeApiBaseUrl(value: string) {
@@ -43,6 +44,7 @@ async function authHeaders(user?: User | null) {
 export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> {
   const { user, headers, ...rest } = init;
   const method = rest.method?.toUpperCase() ?? "GET";
+  const primaryApiBaseUrl = user ? SAME_ORIGIN_API_BASE_URL : API_BASE_URL;
   const requestHeaders = new Headers(headers);
   if (!requestHeaders.has("Content-Type")) {
     requestHeaders.set("Content-Type", "application/json");
@@ -58,9 +60,9 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
 
   let response: Response;
   try {
-    response = await fetchFromBase(API_BASE_URL);
+    response = await fetchFromBase(primaryApiBaseUrl);
   } catch (error) {
-    if (API_BASE_URL === API_FALLBACK_BASE_URL || !canRetryFallback(path, method)) {
+    if (primaryApiBaseUrl === API_FALLBACK_BASE_URL || !canRetryFallback(path, method)) {
       throw error;
     }
     response = await fetchFromBase(API_FALLBACK_BASE_URL);
@@ -70,7 +72,7 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
   let body = text ? JSON.parse(text) : null;
 
   const shouldRetryFallback =
-    API_BASE_URL !== API_FALLBACK_BASE_URL &&
+    primaryApiBaseUrl !== API_FALLBACK_BASE_URL &&
     canRetryFallback(path, method) &&
     (RETRYABLE_STATUSES.has(response.status) || (response.status === 401 && body?.message === PROXY_AUTH_HEADER_ERROR));
 
