@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function PropertiesPage() {
-  return <HomePageContent initialCategory="all" />;
+  return <HomePageContent initialCategory="all" listingPage />;
 }

@@ -254,6 +254,7 @@ function matchesCategoryFilter(property: Property, selectedCategory: "all" | Pro
 
 type HomePageProps = {
   initialCategory?: "all" | PropertyCategory;
+  listingPage?: boolean;
 };
 
 function PropertyImageCarousel({ property }: { property: Property }) {
@@ -345,7 +346,7 @@ function PropertyImageCarousel({ property }: { property: Property }) {
   );
 }
 
-export function HomePageContent({ initialCategory = "all" }: HomePageProps = {}) {
+export function HomePageContent({ initialCategory = "all", listingPage = false }: HomePageProps = {}) {
   const { user } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [listingFormOpen, setListingFormOpen] = useState(false);
@@ -461,6 +462,7 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
   const popularLocalities = (locations.length ? locations : defaultLocalities).slice(0, 6);
   const activeCategory = categories.find((item) => item.value === category);
   const listingHeading = category === "all" ? "Verified stays ready for booking" : `${activeCategory?.label ?? "Category"} listings ready for booking`;
+  const listingPageTitle = category === "all" ? "All Properties in Guwahati" : `${activeCategory?.label ?? "Property"} in Guwahati`;
 
   const token = selectedProperty ? tokenFor(selectedProperty) : 0;
   const total = activeCoupon?.finalAmount ?? token;
@@ -689,9 +691,9 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
   }
 
   return (
-    <main className="tenant-site">
+    <main className={listingPage ? "tenant-site listing-page-main" : "tenant-site"}>
       <nav className="navbar-lux">
-        <a className="navbar-brand-lux" href="#">
+        <a className="navbar-brand-lux" href={listingPage ? "/" : "#"}>
           <img src="/brand/apnarooms-logo.png" alt="ApnaRooms.com" />
         </a>
         <button
@@ -704,10 +706,10 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           <i className={mobileMenuOpen ? "bi bi-x-lg" : "bi bi-list"} />
         </button>
         <div className={mobileMenuOpen ? "nav-link-wrap open" : "nav-link-wrap"}>
-          <a href="#listings" onClick={() => setMobileMenuOpen(false)}>Listings</a>
+          <a href={listingPage ? "/properties" : "#listings"} onClick={() => setMobileMenuOpen(false)}>Listings</a>
           <a href="/about" onClick={() => setMobileMenuOpen(false)}>About</a>
-          <a href="#blog" onClick={() => setMobileMenuOpen(false)}>Blog</a>
-          <a href="#coupon" onClick={() => setMobileMenuOpen(false)}>Offers</a>
+          <a href={listingPage ? "/#blog" : "#blog"} onClick={() => setMobileMenuOpen(false)}>Blog</a>
+          <a href={listingPage ? "/#coupon" : "#coupon"} onClick={() => setMobileMenuOpen(false)}>Offers</a>
           <button
             type="button"
             className="nav-list-button"
@@ -722,6 +724,7 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
         </div>
       </nav>
 
+      {!listingPage ? (
       <section className="hero-luxury">
         <div className="hero-inner">
           <div className="hero-copy">
@@ -814,7 +817,9 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           </div>
         </div>
       </section>
+      ) : null}
 
+      {!listingPage ? (
       <section className="tenant-container app-category-section">
         <div className="app-section-head">
           <div>
@@ -842,7 +847,9 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           ))}
         </div>
       </section>
+      ) : null}
 
+      {!listingPage ? (
       <section className="tenant-container popular-locality-section">
         <div className="app-section-head">
           <div>
@@ -862,7 +869,9 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           ))}
         </div>
       </section>
+      ) : null}
 
+      {!listingPage ? (
       <section className="tenant-container app-owner-strip" id="list-property">
         <div>
           <span>For property owners</span>
@@ -874,15 +883,17 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           List Property
         </button>
       </section>
+      ) : null}
 
       <section className="tenant-container" id="listings">
 
         <div className="listing-meta">
           <div>
-            <span>Recommended</span>
-            <h2>{listingHeading}</h2>
+            <span>{listingPage ? "Live Listings" : "Recommended"}</span>
+            <h2>{listingPage ? listingPageTitle : listingHeading}</h2>
             {apiNotice ? <p className="api-notice">{apiNotice}</p> : null}
           </div>
+          {!listingPage ? (
           <button
             type="button"
             onClick={() => {
@@ -895,6 +906,7 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           >
             Clear filters
           </button>
+          ) : null}
         </div>
 
         {loadingProperties ? (
@@ -946,6 +958,7 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
         )}
       </section>
 
+      {!listingPage ? (
       <section className="tenant-container recent-section-lux">
         <div className="section-title-row">
           <i className="bi bi-clock-history" />
@@ -961,7 +974,9 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           )) : <p>No estates viewed recently.</p>}
         </div>
       </section>
+      ) : null}
 
+      {!listingPage ? (
       <section className="tenant-container about-section" id="about">
         <div className="about-copy">
           <span className="blog-tag">About Us</span>
@@ -987,7 +1002,9 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           <div><strong>12+</strong><span>Prime Localities</span></div>
         </div>
       </section>
+      ) : null}
 
+      {!listingPage ? (
       <section className="tenant-container review-section" id="reviews">
         <div className="listing-meta">
           <div>
@@ -1055,7 +1072,9 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           </form>
         </div>
       </section>
+      ) : null}
 
+      {!listingPage ? (
       <section className="tenant-container coupon-section" id="coupon">
         <div>
           <h2>Active Booking Offers</h2>
@@ -1077,7 +1096,9 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           <button type="button" onClick={() => navigator.clipboard?.writeText("APNA-USER-1234")}>Copy Referral Code</button>
         </div>
       </section>
+      ) : null}
 
+      {!listingPage ? (
       <section className="tenant-container blog-section" id="blog">
         <div className="listing-meta">
           <div>
@@ -1098,6 +1119,7 @@ export function HomePageContent({ initialCategory = "all" }: HomePageProps = {})
           ))}
         </div>
       </section>
+      ) : null}
 
       <footer className="footer-lux">
         <div className="tenant-container footer-grid">

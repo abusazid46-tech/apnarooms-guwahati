@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function FlatsPage() {
-  return <HomePageContent initialCategory="FLAT" />;
+  return <HomePageContent initialCategory="FLAT" listingPage />;
 }

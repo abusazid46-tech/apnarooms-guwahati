@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function RoomsPage() {
-  return <HomePageContent initialCategory="ROOM" />;
+  return <HomePageContent initialCategory="ROOM" listingPage />;
 }

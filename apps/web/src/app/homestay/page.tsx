@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function HomestayPage() {
-  return <HomePageContent initialCategory="HOMESTAY" />;
+  return <HomePageContent initialCategory="HOMESTAY" listingPage />;
 }

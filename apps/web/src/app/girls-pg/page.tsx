@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function GirlsPgPage() {
-  return <HomePageContent initialCategory="GIRLS_PG" />;
+  return <HomePageContent initialCategory="GIRLS_PG" listingPage />;
 }
