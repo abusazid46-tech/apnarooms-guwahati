@@ -13,6 +13,12 @@ const API_FALLBACK_BASE_URL = DEFAULT_API_BASE_URL;
 const RETRYABLE_STATUSES = new Set([502, 503, 504]);
 const PROXY_AUTH_HEADER_ERROR = "Missing auth token";
 
+function canRetryFallback(path: string, method: string) {
+  if (method !== "GET") return false;
+  if (path.includes("/admin") || path.includes("/owner") || path.includes("/me")) return false;
+  return true;
+}
+
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -35,6 +41,7 @@ async function authHeaders(user?: User | null) {
 
 export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> {
   const { user, headers, ...rest } = init;
+  const method = rest.method?.toUpperCase() ?? "GET";
   const requestHeaders = new Headers(headers);
   if (!requestHeaders.has("Content-Type")) {
     requestHeaders.set("Content-Type", "application/json");
@@ -52,7 +59,7 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
   try {
     response = await fetchFromBase(API_BASE_URL);
   } catch (error) {
-    if (API_BASE_URL === API_FALLBACK_BASE_URL) {
+    if (API_BASE_URL === API_FALLBACK_BASE_URL || !canRetryFallback(path, method)) {
       throw error;
     }
     response = await fetchFromBase(API_FALLBACK_BASE_URL);
@@ -63,6 +70,7 @@ export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> 
 
   const shouldRetryFallback =
     API_BASE_URL !== API_FALLBACK_BASE_URL &&
+    canRetryFallback(path, method) &&
     (RETRYABLE_STATUSES.has(response.status) || (response.status === 401 && body?.message === PROXY_AUTH_HEADER_ERROR));
 
   if (shouldRetryFallback) {
