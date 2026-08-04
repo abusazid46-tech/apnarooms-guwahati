@@ -15,6 +15,7 @@ function loadEnvFile() {
     process.env.HOSTINGER_SHARED_ENV_PATH,
     path.join(rootDir, ".env"),
     path.resolve(rootDir, "..", "..", "..", "nodejs", ".env"),
+    path.resolve(rootDir, "..", "..", "..", "..", "nodejs", ".env"),
   ].find((candidate) => candidate && fs.existsSync(candidate));
 
   if (!envPath) {
