@@ -95,10 +95,9 @@ a {
   width: min(250px, 48vw);
   min-width: 168px;
   min-height: 52px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: rgba(12, 16, 30, 0.82);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .navbar-brand-lux img {

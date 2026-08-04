@@ -3,6 +3,7 @@ import express from "express";
 import helmet from "helmet";
 import { authRoutes } from "./modules/auth/auth.routes.js";
 import { bookingsRoutes } from "./modules/bookings/bookings.routes.js";
+import { blogRoutes } from "./modules/blog/blog.routes.js";
 import { couponsRoutes } from "./modules/coupons/coupons.routes.js";
 import { leadsRoutes } from "./modules/leads/leads.routes.js";
 import { paymentsRoutes } from "./modules/payments/payments.routes.js";
@@ -51,6 +52,7 @@ export function createApp() {
   app.use("/api/auth", authRoutes);
   app.use("/api/users", usersRoutes);
   app.use("/api/properties", propertiesRoutes);
+  app.use("/api/blog", blogRoutes);
   app.use("/api/bookings", bookingsRoutes);
   app.use("/api/payments", paymentsRoutes);
   app.use("/api/leads", leadsRoutes);

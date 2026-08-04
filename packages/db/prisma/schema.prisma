@@ -63,6 +63,12 @@ enum ReviewStatus {
   REJECTED
 }
 
+enum BlogStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
 enum CouponType {
   PERCENT
   FLAT
@@ -248,4 +254,22 @@ model AdminNotification {
   @@index([readAt])
   @@index([createdAt])
   @@index([type])
+}
+
+model BlogPost {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  excerpt     String?
+  body        String
+  category    String?
+  coverImage  String?
+  authorName  String?
+  status      BlogStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([status, publishedAt])
+  @@index([createdAt])
 }

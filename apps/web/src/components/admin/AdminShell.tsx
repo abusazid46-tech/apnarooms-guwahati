@@ -14,6 +14,7 @@ const links = [
   ["/admin/offers", "Offers"],
   ["/admin/leads", "CRM Leads"],
   ["/admin/reviews", "Reviews"],
+  ["/admin/blog", "Blog"],
   ["/admin/users", "Users"],
   ["/admin/payments", "Payments"],
   ["/", "Tenant Website"]

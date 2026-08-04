@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import { apiFetch, apiPost } from "@/lib/api";
 import { loadRazorpayCheckout } from "@/lib/razorpay";
 import { useAuth } from "@/hooks/useAuth";
-import type { BackendBooking, BackendProperty, BackendReview } from "@/types/api";
+import type { BackendBlogPost, BackendBooking, BackendProperty, BackendReview } from "@/types/api";
 
 type PropertyCategory = BackendProperty["category"];
 
@@ -40,6 +40,14 @@ type PublicCoupon = {
   value: number;
   maxDiscount?: number | null;
   expiresAt?: string | null;
+};
+
+type PublicBlogCard = {
+  id: string;
+  title: string;
+  category: string;
+  excerpt: string;
+  image: string;
 };
 
 type CategoryTile = {
@@ -79,6 +87,30 @@ const categorySearchTerms: Record<PropertyCategory, string[]> = {
   HOMESTAY: ["homestay", "home stay", "daily stay"],
   HOSTEL: ["hostel", "hostels"]
 };
+
+const fallbackBlogPosts: PublicBlogCard[] = [
+  {
+    id: "tenant-tips",
+    category: "Tenant Tips",
+    title: "5 Things to Check Before Renting a PG in Guwahati",
+    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=80",
+    excerpt: "Short, practical guidance for renters before they schedule a visit or book a token."
+  },
+  {
+    id: "market-trends",
+    category: "Market Trends",
+    title: "Rental Prices in Guwahati: Area-by-Area Breakdown",
+    image: "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80",
+    excerpt: "Short, practical guidance for renters before they schedule a visit or book a token."
+  },
+  {
+    id: "legal-guide",
+    category: "Legal Guide",
+    title: "Rental Agreement in Assam: What You Must Know",
+    image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80",
+    excerpt: "Short, practical guidance for renters before they schedule a visit or book a token."
+  }
+];
 
 const defaultLocalities = ["Beltola", "Ganeshguri", "Six Mile", "GS Road", "Panjabari", "Kahilipara"];
 
@@ -173,6 +205,16 @@ function mapBackendProperty(property: BackendProperty): Property {
     billingUnit: property.category === "HOMESTAY" ? "day" : "month",
     details: property.amenities.length ? property.amenities : [categoryLabels[property.category], property.isAvailable ? "Available" : "Reserved"],
     images: normaliseImages(property.images.map((image) => image.url))
+  };
+}
+
+function mapBlogPost(post: BackendBlogPost): PublicBlogCard {
+  return {
+    id: post.id,
+    title: post.title,
+    category: post.category || "ApnaRooms Blog",
+    excerpt: post.excerpt || post.body.slice(0, 140),
+    image: post.coverImage || "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=80"
   };
 }
 
@@ -321,6 +363,7 @@ export default function HomePage() {
   const [couponStatus, setCouponStatus] = useState("");
   const [checkoutMessage, setCheckoutMessage] = useState("");
   const [reviews, setReviews] = useState<BackendReview[]>([]);
+  const [blogPosts, setBlogPosts] = useState<PublicBlogCard[]>(fallbackBlogPosts);
   const [reviewForm, setReviewForm] = useState(initialReviewForm);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewMessage, setReviewMessage] = useState("");
@@ -354,6 +397,10 @@ export default function HomePage() {
     apiFetch<{ reviews: BackendReview[] }>("/reviews?limit=12")
       .then((result) => setReviews(result.reviews))
       .catch(() => setReviews([]));
+
+    apiFetch<{ posts: BackendBlogPost[] }>("/blog?limit=6")
+      .then((result) => setBlogPosts(result.posts.length ? result.posts.map(mapBlogPost) : fallbackBlogPosts))
+      .catch(() => setBlogPosts(fallbackBlogPosts));
   }, []);
 
   useEffect(() => {
@@ -1030,17 +1077,13 @@ export default function HomePage() {
           </div>
         </div>
         <div className="blog-grid-lux">
-          {[
-            ["Tenant Tips", "5 Things to Check Before Renting a PG in Guwahati", "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=900&q=80"],
-            ["Market Trends", "Rental Prices in Guwahati: Area-by-Area Breakdown", "https://images.unsplash.com/photo-1494526585095-c41746248156?auto=format&fit=crop&w=900&q=80"],
-            ["Legal Guide", "Rental Agreement in Assam: What You Must Know", "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=900&q=80"]
-          ].map(([tag, title, image]) => (
-            <article className="blog-card-lux" key={title}>
-              <img src={image} alt={title} />
+          {blogPosts.map((post) => (
+            <article className="blog-card-lux" key={post.id}>
+              <img src={post.image} alt={post.title} />
               <div>
-                <span>{tag}</span>
-                <h3>{title}</h3>
-                <p>Short, practical guidance for renters before they schedule a visit or book a token.</p>
+                <span>{post.category}</span>
+                <h3>{post.title}</h3>
+                <p>{post.excerpt}</p>
               </div>
             </article>
           ))}
