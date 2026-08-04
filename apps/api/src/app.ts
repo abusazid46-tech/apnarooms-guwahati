@@ -30,8 +30,10 @@ const allowedOrigins = Array.from(
   ])
 );
 
-const publicPropertiesFallbackBaseUrl =
-  process.env.PUBLIC_PROPERTIES_FALLBACK_BASE_URL?.trim() || "https://darkred-coyote-647666.hostingersite.com";
+const fallbackApiBaseUrl =
+  process.env.FALLBACK_API_BASE_URL?.trim() ||
+  process.env.PUBLIC_PROPERTIES_FALLBACK_BASE_URL?.trim() ||
+  "https://darkred-coyote-647666.hostingersite.com";
 
 function corsOrigin(origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) {
   if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
@@ -42,27 +44,29 @@ function corsOrigin(origin: string | undefined, callback: (error: Error | null, 
   callback(new Error(`CORS origin is not allowed: ${origin}`));
 }
 
-function isPublicPropertyRead(pathname: string) {
-  return pathname === "/" || /^\/[^/]+$/.test(pathname);
-}
-
-async function proxyPublicPropertyRead(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (req.method !== "GET" || !isPublicPropertyRead(req.path)) {
-    next();
-    return;
-  }
-
+async function proxyFallbackApi(req: express.Request, res: express.Response, next: express.NextFunction) {
   try {
-    const upstreamUrl = new URL(`/api/properties${req.path}`, publicPropertiesFallbackBaseUrl);
-    const query = req.originalUrl.split("?")[1];
-    if (query) upstreamUrl.search = query;
+    const upstreamUrl = new URL(req.originalUrl, fallbackApiBaseUrl);
+    const headers = new Headers();
 
-    const upstreamResponse = await fetch(upstreamUrl);
-    const body = await upstreamResponse.text();
-    const contentType = upstreamResponse.headers.get("content-type");
+    for (const [key, value] of Object.entries(req.headers)) {
+      if (!value || ["host", "content-length", "connection"].includes(key.toLowerCase())) continue;
+      headers.set(key, Array.isArray(value) ? value.join(", ") : value);
+    }
 
-    if (contentType) res.setHeader("content-type", contentType);
-    res.status(upstreamResponse.status).send(body);
+    const hasBody = !["GET", "HEAD"].includes(req.method);
+    const requestBody = hasBody && req.body ? JSON.stringify(req.body) : undefined;
+    if (requestBody && !headers.has("content-type")) headers.set("content-type", "application/json");
+
+    const upstreamResponse = await fetch(upstreamUrl, { method: req.method, headers, body: requestBody });
+    const responseBody = await upstreamResponse.text();
+
+    upstreamResponse.headers.forEach((value, key) => {
+      if (["content-encoding", "content-length", "transfer-encoding"].includes(key.toLowerCase())) return;
+      res.setHeader(key, value);
+    });
+
+    res.status(upstreamResponse.status).send(responseBody);
   } catch (error) {
     next(error);
   }
@@ -80,8 +84,9 @@ export function createApp() {
   app.get("/health", (_req, res) => res.json({ ok: true }));
   app.use("/api/auth", authRoutes);
   app.use("/api/users", usersRoutes);
-  app.use("/api/properties", proxyPublicPropertyRead);
+  app.use("/api/properties", proxyFallbackApi);
   app.use("/api/properties", propertiesRoutes);
+  app.use("/api/reviews", proxyFallbackApi);
   app.use("/api/blog", blogRoutes);
   app.use("/api/bookings", bookingsRoutes);
   app.use("/api/payments", paymentsRoutes);
