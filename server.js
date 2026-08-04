@@ -9,16 +9,24 @@ const webRequire = createRequire(path.join(webDir, "package.json"));
 const next = webRequire("next");
 
 const port = Number(process.env.PORT ?? process.env.API_PORT ?? 4000);
-const app = createApp();
 
-if (process.env.SERVE_WEB !== "false") {
-  const webApp = next({ dev: false, dir: webDir });
-  const handle = webApp.getRequestHandler();
+async function start() {
+  const app = createApp();
 
-  await webApp.prepare();
-  app.use((req, res) => handle(req, res));
+  if (process.env.SERVE_WEB !== "false") {
+    const webApp = next({ dev: false, dir: webDir });
+    const handle = webApp.getRequestHandler();
+
+    await webApp.prepare();
+    app.use((req, res) => handle(req, res));
+  }
+
+  app.listen(port, "0.0.0.0", () => {
+    console.log(`ApnaRooms listening on http://localhost:${port}`);
+  });
 }
 
-app.listen(port, "0.0.0.0", () => {
-  console.log(`ApnaRooms listening on http://localhost:${port}`);
+start().catch((error) => {
+  console.error(error);
+  process.exit(1);
 });
