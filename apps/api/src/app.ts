@@ -30,6 +30,9 @@ const allowedOrigins = Array.from(
   ])
 );
 
+const publicPropertiesFallbackBaseUrl =
+  process.env.PUBLIC_PROPERTIES_FALLBACK_BASE_URL?.trim() || "https://darkred-coyote-647666.hostingersite.com";
+
 function corsOrigin(origin: string | undefined, callback: (error: Error | null, allow?: boolean) => void) {
   if (!origin || allowedOrigins.includes("*") || allowedOrigins.includes(origin)) {
     callback(null, true);
@@ -37,6 +40,32 @@ function corsOrigin(origin: string | undefined, callback: (error: Error | null, 
   }
 
   callback(new Error(`CORS origin is not allowed: ${origin}`));
+}
+
+function isPublicPropertyRead(pathname: string) {
+  return pathname === "/" || /^\/[^/]+$/.test(pathname);
+}
+
+async function proxyPublicPropertyRead(req: express.Request, res: express.Response, next: express.NextFunction) {
+  if (req.method !== "GET" || !isPublicPropertyRead(req.path)) {
+    next();
+    return;
+  }
+
+  try {
+    const upstreamUrl = new URL(`/api/properties${req.path}`, publicPropertiesFallbackBaseUrl);
+    const query = req.originalUrl.split("?")[1];
+    if (query) upstreamUrl.search = query;
+
+    const upstreamResponse = await fetch(upstreamUrl);
+    const body = await upstreamResponse.text();
+    const contentType = upstreamResponse.headers.get("content-type");
+
+    if (contentType) res.setHeader("content-type", contentType);
+    res.status(upstreamResponse.status).send(body);
+  } catch (error) {
+    next(error);
+  }
 }
 
 export function createApp() {
@@ -51,6 +80,7 @@ export function createApp() {
   app.get("/health", (_req, res) => res.json({ ok: true }));
   app.use("/api/auth", authRoutes);
   app.use("/api/users", usersRoutes);
+  app.use("/api/properties", proxyPublicPropertyRead);
   app.use("/api/properties", propertiesRoutes);
   app.use("/api/blog", blogRoutes);
   app.use("/api/bookings", bookingsRoutes);
