@@ -8,3 +8,6 @@ coverage
 *.log
 *.tsbuildinfo
 .DS_Store
+.vercel
+.env*
+hostinger-cloudinary.env
