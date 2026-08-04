@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useMemo, useState } from "react";
 import { getFirebaseAuth } from "@/lib/firebase";
 import { apiFetch, apiPatch, apiPost } from "@/lib/api";
-import { uploadPropertyImage } from "@/lib/storage";
+import { isCloudinaryUploadConfigured, uploadPropertyImage } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import type { BackendBooking, BackendProperty } from "@/types/api";
 
@@ -239,10 +239,14 @@ export default function TenantDashboardPage() {
 
       if (editingPropertyId) {
         const uploadedImages = [];
-        for (const [index, file] of ownerImages.entries()) {
-          setOwnerMessage(`Uploading photo ${index + 1} of ${ownerImages.length}...`);
-          const url = await uploadPropertyImage(file, editingPropertyId);
-          uploadedImages.push({ url, alt: ownerForm.title });
+        if (ownerImages.length && !isCloudinaryUploadConfigured()) {
+          setOwnerMessage("Listing details saved. Photo upload needs Cloudinary setup, so selected files were skipped.");
+        } else {
+          for (const [index, file] of ownerImages.entries()) {
+            setOwnerMessage(`Uploading photo ${index + 1} of ${ownerImages.length}...`);
+            const url = await uploadPropertyImage(file, editingPropertyId);
+            uploadedImages.push({ url, alt: ownerForm.title });
+          }
         }
 
         const images = [...uploadedImages, ...typedImages].map((image, index) => ({ ...image, sortOrder: index }));
@@ -250,19 +254,23 @@ export default function TenantDashboardPage() {
       } else {
         const result = await apiPost<{ property: BackendProperty }>("/properties/owner", payload, { user });
 
-        for (const [index, file] of ownerImages.entries()) {
-          setOwnerMessage(`Uploading photo ${index + 1} of ${ownerImages.length}...`);
-          const url = await uploadPropertyImage(file, result.property.id);
-          await apiPost(`/properties/owner/${result.property.id}/images`, {
-            url,
-            alt: result.property.title,
-            sortOrder: typedImages.length + index
-          }, { user });
+        if (ownerImages.length && !isCloudinaryUploadConfigured()) {
+          setOwnerMessage("Listing submitted. Photo upload needs Cloudinary setup, so selected files were skipped.");
+        } else {
+          for (const [index, file] of ownerImages.entries()) {
+            setOwnerMessage(`Uploading photo ${index + 1} of ${ownerImages.length}...`);
+            const url = await uploadPropertyImage(file, result.property.id);
+            await apiPost(`/properties/owner/${result.property.id}/images`, {
+              url,
+              alt: result.property.title,
+              sortOrder: typedImages.length + index
+            }, { user });
+          }
         }
       }
 
       resetOwnerForm();
-      setOwnerMessage("Listing saved as draft. Admin approval is required before it appears publicly.");
+      setOwnerMessage(ownerImages.length && !isCloudinaryUploadConfigured() ? "Listing saved. Add image URLs or configure Cloudinary for direct photo uploads." : "Listing saved as draft. Admin approval is required before it appears publicly.");
       await loadOwnerProperties();
     } catch (error) {
       setOwnerMessage(error instanceof Error ? error.message : "Unable to save owner listing.");

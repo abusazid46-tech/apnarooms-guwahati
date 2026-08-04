@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { useAuth } from "@/hooks/useAuth";
 import { apiFetch, apiPatch } from "@/lib/api";
-import { uploadPropertyImage } from "@/lib/storage";
+import { isCloudinaryUploadConfigured, uploadPropertyImage } from "@/lib/storage";
 import type { BackendProperty } from "@/types/api";
 
 type UploadDiagnostic = {
@@ -138,12 +138,19 @@ export default function EditPropertyPage() {
     try {
       const uploadedImages = [];
 
-      for (const [index, file] of imageFiles.entries()) {
-        setMessage(`Uploading image ${index + 1} of ${imageFiles.length}...`);
-        addUploadDiagnostic({ status: "info", message: `Uploading ${file.name} to Cloudinary...` });
-        const url = await uploadPropertyImage(file, property.id);
-        addUploadDiagnostic({ status: "success", message: `Cloudinary upload success: ${file.name}`, url });
-        uploadedImages.push({ url, alt: form.title });
+      if (imageFiles.length && !isCloudinaryUploadConfigured()) {
+        addUploadDiagnostic({
+          status: "error",
+          message: "Photo upload is not configured. Saving property details and pasted image URLs only."
+        });
+      } else {
+        for (const [index, file] of imageFiles.entries()) {
+          setMessage(`Uploading image ${index + 1} of ${imageFiles.length}...`);
+          addUploadDiagnostic({ status: "info", message: `Uploading ${file.name} to Cloudinary...` });
+          const url = await uploadPropertyImage(file, property.id);
+          addUploadDiagnostic({ status: "success", message: `Cloudinary upload success: ${file.name}`, url });
+          uploadedImages.push({ url, alt: form.title });
+        }
       }
 
       const images = [...uploadedImages, ...existingImages].map((image, index) => ({
@@ -193,7 +200,7 @@ export default function EditPropertyPage() {
         url: result.property.images[0]?.url
       });
       setImageFiles([]);
-      setMessage(result.property.images.length ? "Property updated. New photos are now first in the gallery." : "Property updated.");
+      setMessage(imageFiles.length && !isCloudinaryUploadConfigured() ? "Property updated. Add image URLs or configure Cloudinary for direct photo uploads." : result.property.images.length ? "Property updated. New photos are now first in the gallery." : "Property updated.");
       await loadProperty();
     } catch (error) {
       console.error("[ApnaRooms upload] Edit image save failed", error);

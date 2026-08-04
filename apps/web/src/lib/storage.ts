@@ -20,6 +20,10 @@ function assertCloudinaryConfig() {
   }
 }
 
+export function isCloudinaryUploadConfigured() {
+  return Boolean(CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET);
+}
+
 export async function uploadPropertyImage(file: File, _propertyId: string): Promise<string> {
   assertCloudinaryConfig();
 

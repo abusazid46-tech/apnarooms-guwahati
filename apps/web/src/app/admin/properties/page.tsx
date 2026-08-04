@@ -3,7 +3,7 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
 import { AdminShell } from "@/components/admin/AdminShell";
 import { apiDelete, apiFetch, apiPatch, apiPost } from "@/lib/api";
-import { uploadPropertyImage } from "@/lib/storage";
+import { isCloudinaryUploadConfigured, uploadPropertyImage } from "@/lib/storage";
 import { useAuth } from "@/hooks/useAuth";
 import type { BackendProperty, Paginated } from "@/types/api";
 
@@ -139,26 +139,43 @@ export default function AdminPropertiesPage() {
       });
       addUploadDiagnostic({ status: "success", message: `Backend property created: ${result.property.id}` });
 
-      for (const [index, file] of imageFiles.entries()) {
-        setMessage(`Uploading image ${index + 1} of ${imageFiles.length}...`);
-        addUploadDiagnostic({ status: "info", message: `Uploading ${file.name} to Cloudinary...` });
-        const url = await uploadPropertyImage(file, result.property.id);
-        addUploadDiagnostic({ status: "success", message: `Cloudinary upload success: ${file.name}`, url });
-        const imageResult = await apiPost<{ image: { url: string } }>(`/properties/${result.property.id}/images`, {
-          url,
-          alt: result.property.title,
-          sortOrder: images.length + index
-        }, { user });
-        console.info("[ApnaRooms upload] Backend image saved", {
-          propertyId: result.property.id,
-          imageUrl: imageResult.image.url
+      if (imageFiles.length && !isCloudinaryUploadConfigured()) {
+        addUploadDiagnostic({
+          status: "error",
+          message: "Property was created, but photo upload is not configured. Paste Cloudinary image URLs in the image URL box or add Cloudinary env vars before uploading files."
         });
-        addUploadDiagnostic({ status: "success", message: "Backend image URL saved.", url: imageResult.image.url });
+      }
+
+      for (const [index, file] of imageFiles.entries()) {
+        if (!isCloudinaryUploadConfigured()) break;
+
+        try {
+          setMessage(`Uploading image ${index + 1} of ${imageFiles.length}...`);
+          addUploadDiagnostic({ status: "info", message: `Uploading ${file.name} to Cloudinary...` });
+          const url = await uploadPropertyImage(file, result.property.id);
+          addUploadDiagnostic({ status: "success", message: `Cloudinary upload success: ${file.name}`, url });
+          const imageResult = await apiPost<{ image: { url: string } }>(`/properties/${result.property.id}/images`, {
+            url,
+            alt: result.property.title,
+            sortOrder: images.length + index
+          }, { user });
+          console.info("[ApnaRooms upload] Backend image saved", {
+            propertyId: result.property.id,
+            imageUrl: imageResult.image.url
+          });
+          addUploadDiagnostic({ status: "success", message: "Backend image URL saved.", url: imageResult.image.url });
+        } catch (uploadError) {
+          console.error("[ApnaRooms upload] Image upload failed after property creation", uploadError);
+          addUploadDiagnostic({
+            status: "error",
+            message: uploadError instanceof Error ? uploadError.message : `Image upload failed: ${file.name}`
+          });
+        }
       }
 
       setForm(initialForm);
       setImageFiles([]);
-      setMessage("Property created and published.");
+      setMessage(imageFiles.length && !isCloudinaryUploadConfigured() ? "Property created. Add image URLs or configure Cloudinary for photo uploads." : "Property created and published.");
       await loadProperties();
     } catch (error) {
       console.error("[ApnaRooms upload] Create property image save failed", error);
