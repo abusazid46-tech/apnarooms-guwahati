@@ -240,6 +240,10 @@ a {
   line-height: 1.02;
 }
 
+.hero-nowrap {
+  white-space: nowrap;
+}
+
 .hero-copy p {
   margin: 4px 0 0;
   max-width: 650px;
@@ -2903,7 +2907,8 @@ a {
   }
 
   .hero-copy h1 {
-    font-size: clamp(2rem, 10vw, 3rem);
+    font-size: clamp(1.72rem, 7.8vw, 2.35rem);
+    line-height: 1.08;
   }
 
   .hero-actions,

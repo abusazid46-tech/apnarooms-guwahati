@@ -727,7 +727,9 @@ export default function HomePage() {
                 <p>{user?.displayName ? `Hi ${user.displayName.split(" ")[0]}, find your next stay.` : "Premium stays across Guwahati."}</p>
               </div>
             </div>
-            <h1>Find Your Rooms Anytime - Anywhere</h1>
+            <h1>
+              Find Your Rooms <span className="hero-nowrap">Anytime - Anywhere</span>
+            </h1>
             <div className="hero-actions">
               <a href="#listings" className="hero-primary-action">
                 <i className="bi bi-search" />
