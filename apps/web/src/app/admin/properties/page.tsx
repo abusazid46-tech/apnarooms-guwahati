@@ -41,6 +41,7 @@ export default function AdminPropertiesPage() {
   const [message, setMessage] = useState("");
   const [uploadDiagnostics, setUploadDiagnostics] = useState<UploadDiagnostic[]>([]);
   const [saving, setSaving] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
 
   function addUploadDiagnostic(diagnostic: UploadDiagnostic) {
     setUploadDiagnostics((current) => [...current, diagnostic]);
@@ -175,6 +176,7 @@ export default function AdminPropertiesPage() {
 
       setForm(initialForm);
       setImageFiles([]);
+      setShowCreateForm(false);
       setMessage(imageFiles.length && !isCloudinaryUploadConfigured() ? "Property created. Add image URLs or configure Cloudinary for photo uploads." : "Property created and published.");
       await loadProperties();
     } catch (error) {
@@ -206,65 +208,19 @@ export default function AdminPropertiesPage() {
       <section className="admin-main">
         <header className="admin-topbar">
           <div><p>Inventory</p><h1>Manage Properties</h1></div>
+          <button type="button" onClick={() => setShowCreateForm((open) => !open)}>
+            <i className={`bi ${showCreateForm ? "bi-x-lg" : "bi-plus-lg"}`} />
+            {showCreateForm ? "Close Form" : "Create Property"}
+          </button>
         </header>
 
         <section className="admin-panel">
-          <div className="admin-panel-head"><h2>Create Property</h2><span>{message}</span></div>
-          <form className="admin-form" onSubmit={createProperty}>
-            <input value={form.ownerName} onChange={(e) => setForm({ ...form, ownerName: e.target.value })} placeholder="Owner name" />
-            <input value={form.ownerPhone} onChange={(e) => setForm({ ...form, ownerPhone: e.target.value })} placeholder="Owner contact number" inputMode="tel" />
-            <input value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} placeholder="Owner email ID" type="email" />
-            <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Property title" required />
-            <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short listing description" />
-            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-              <option value="PG">PG</option>
-              <option value="GIRLS_PG">Girls PG</option>
-              <option value="BOYS_PG">Boys PG</option>
-              <option value="ROOM">Room</option>
-              <option value="FLAT">Flat</option>
-              <option value="HOMESTAY">Homestay</option>
-              <option value="HOSTEL">Hostel</option>
-            </select>
-            <input value={form.rentMonthly} onChange={(e) => setForm({ ...form, rentMonthly: e.target.value })} placeholder={form.category === "HOMESTAY" ? "Daily rate" : "Monthly rent"} />
-            <input value={form.depositAmount} onChange={(e) => setForm({ ...form, depositAmount: e.target.value })} placeholder="Deposit amount" />
-            <input value={form.tokenAmount} onChange={(e) => setForm({ ...form, tokenAmount: e.target.value })} placeholder="Token amount" />
-            <input value={form.locality} onChange={(e) => setForm({ ...form, locality: e.target.value })} placeholder="Locality" />
-            <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="City" />
-            <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Address" />
-            <input value={form.amenities} onChange={(e) => setForm({ ...form, amenities: e.target.value })} placeholder="Amenities comma separated" />
-            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              <option value="PUBLISHED">Published</option>
-              <option value="DRAFT">Draft</option>
-              <option value="UNPUBLISHED">Unpublished</option>
-            </select>
-            <label><input type="checkbox" checked={form.isVerified} onChange={(e) => setForm({ ...form, isVerified: e.target.checked })} /> Verified</label>
-            <label><input type="checkbox" checked={form.isAvailable} onChange={(e) => setForm({ ...form, isAvailable: e.target.checked })} /> Available</label>
-            <textarea value={form.imageUrls} onChange={(e) => setForm({ ...form, imageUrls: e.target.value })} placeholder="Image URLs, one per line" />
-            <label className="admin-file-field">
-              <span>Upload property photos</span>
-              <input type="file" accept="image/*" multiple onChange={updateImageFiles} />
-            </label>
-            <p className="admin-form-note">Photos upload to Cloudinary and are saved to the live property. Image URLs still work.</p>
-            {imageFiles.length > 0 ? <p className="admin-form-note">{imageFiles.length} image file{imageFiles.length > 1 ? "s" : ""} selected.</p> : null}
-            {uploadDiagnostics.length > 0 ? (
-              <div className="admin-upload-diagnostics">
-                <strong>Upload diagnostics</strong>
-                {uploadDiagnostics.map((item, index) => (
-                  <div className={`admin-upload-log ${item.status}`} key={`${item.message}-${index}`}>
-                    <span>{item.message}</span>
-                    {item.url ? <a href={item.url} target="_blank" rel="noreferrer">{item.url}</a> : null}
-                  </div>
-                ))}
-              </div>
-            ) : null}
-            <button type="submit" disabled={saving}>{saving ? "Saving..." : "Create Property"}</button>
-          </form>
-        </section>
-
-        <section className="admin-panel">
-          <div className="admin-panel-head"><h2>Properties</h2><span>{properties.length} total</span></div>
+          <div className="admin-panel-head">
+            <h2>All Properties</h2>
+            <span>{properties.length} total from admins and owners</span>
+          </div>
           <div className="admin-card-list">
-            {properties.map((property) => (
+            {properties.length ? properties.map((property) => (
               <article key={property.id}>
                 {property.images[0]?.url ? (
                   <img src={property.images[0].url} alt={property.title} />
@@ -289,9 +245,69 @@ export default function AdminPropertiesPage() {
                   </div>
                 </div>
               </article>
-            ))}
+            )) : (
+              <div className="admin-empty-state">
+                <strong>No properties yet</strong>
+                <span>Create the first listing from the button above.</span>
+              </div>
+            )}
           </div>
         </section>
+
+        {showCreateForm ? (
+          <section className="admin-panel" id="create-property">
+            <div className="admin-panel-head"><h2>Create Property</h2><span>{message}</span></div>
+            <form className="admin-form" onSubmit={createProperty}>
+              <input value={form.ownerName} onChange={(e) => setForm({ ...form, ownerName: e.target.value })} placeholder="Owner name" />
+              <input value={form.ownerPhone} onChange={(e) => setForm({ ...form, ownerPhone: e.target.value })} placeholder="Owner contact number" inputMode="tel" />
+              <input value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} placeholder="Owner email ID" type="email" />
+              <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="Property title" required />
+              <textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Short listing description" />
+              <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+                <option value="PG">PG</option>
+                <option value="GIRLS_PG">Girls PG</option>
+                <option value="BOYS_PG">Boys PG</option>
+                <option value="ROOM">Room</option>
+                <option value="FLAT">Flat</option>
+                <option value="HOMESTAY">Homestay</option>
+                <option value="HOSTEL">Hostel</option>
+              </select>
+              <input value={form.rentMonthly} onChange={(e) => setForm({ ...form, rentMonthly: e.target.value })} placeholder={form.category === "HOMESTAY" ? "Daily rate" : "Monthly rent"} />
+              <input value={form.depositAmount} onChange={(e) => setForm({ ...form, depositAmount: e.target.value })} placeholder="Deposit amount" />
+              <input value={form.tokenAmount} onChange={(e) => setForm({ ...form, tokenAmount: e.target.value })} placeholder="Token amount" />
+              <input value={form.locality} onChange={(e) => setForm({ ...form, locality: e.target.value })} placeholder="Locality" />
+              <input value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} placeholder="City" />
+              <input value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} placeholder="Address" />
+              <input value={form.amenities} onChange={(e) => setForm({ ...form, amenities: e.target.value })} placeholder="Amenities comma separated" />
+              <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                <option value="PUBLISHED">Published</option>
+                <option value="DRAFT">Draft</option>
+                <option value="UNPUBLISHED">Unpublished</option>
+              </select>
+              <label><input type="checkbox" checked={form.isVerified} onChange={(e) => setForm({ ...form, isVerified: e.target.checked })} /> Verified</label>
+              <label><input type="checkbox" checked={form.isAvailable} onChange={(e) => setForm({ ...form, isAvailable: e.target.checked })} /> Available</label>
+              <textarea value={form.imageUrls} onChange={(e) => setForm({ ...form, imageUrls: e.target.value })} placeholder="Image URLs, one per line" />
+              <label className="admin-file-field">
+                <span>Upload property photos</span>
+                <input type="file" accept="image/*" multiple onChange={updateImageFiles} />
+              </label>
+              <p className="admin-form-note">Photos upload to Cloudinary and are saved to the live property. Image URLs still work.</p>
+              {imageFiles.length > 0 ? <p className="admin-form-note">{imageFiles.length} image file{imageFiles.length > 1 ? "s" : ""} selected.</p> : null}
+              {uploadDiagnostics.length > 0 ? (
+                <div className="admin-upload-diagnostics">
+                  <strong>Upload diagnostics</strong>
+                  {uploadDiagnostics.map((item, index) => (
+                    <div className={`admin-upload-log ${item.status}`} key={`${item.message}-${index}`}>
+                      <span>{item.message}</span>
+                      {item.url ? <a href={item.url} target="_blank" rel="noreferrer">{item.url}</a> : null}
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+              <button type="submit" disabled={saving}>{saving ? "Saving..." : "Create Property"}</button>
+            </form>
+          </section>
+        ) : null}
       </section>
     </AdminShell>
   );
