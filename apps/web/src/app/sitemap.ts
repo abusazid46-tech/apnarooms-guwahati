@@ -12,6 +12,13 @@ const routes = [
   "/affordable-rooms-for-rent-in-guwahati",
   "/homestay-in-guwahati",
   "/properties",
+  "/pg",
+  "/girls-pg",
+  "/boys-pg",
+  "/rooms",
+  "/flats",
+  "/homestay",
+  "/hostel",
   "/about"
 ];
 

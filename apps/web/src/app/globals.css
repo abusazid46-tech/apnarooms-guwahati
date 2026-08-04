@@ -585,6 +585,7 @@ a {
 .category-lux {
   display: grid;
   justify-items: center;
+  align-content: center;
   gap: 10px;
   border: 1px solid rgba(91, 85, 183, 0.1);
   border-radius: 22px;
@@ -596,6 +597,7 @@ a {
   font-size: 0.88rem;
   font-weight: 900;
   text-align: center;
+  text-decoration: none;
   box-shadow: 0 16px 34px -26px rgba(63, 58, 151, 0.55);
 }
 
