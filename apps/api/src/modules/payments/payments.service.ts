@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import { prisma } from "@apnarooms/db";
 import { env } from "../../config/env.js";
-import { razorpay } from "../../config/razorpay.js";
+import { getRazorpay } from "../../config/razorpay.js";
 import { ApiError } from "../../utils/api-error.js";
 
 type VerifyInput = {
@@ -36,6 +36,10 @@ function pagination(query: Record<string, unknown>) {
 }
 
 function paymentSignature(orderId: string, paymentId: string) {
+  if (!env.RAZORPAY_KEY_SECRET) {
+    throw new ApiError(503, "Razorpay server configuration is missing");
+  }
+
   return crypto.createHmac("sha256", env.RAZORPAY_KEY_SECRET).update(`${orderId}|${paymentId}`).digest("hex");
 }
 
@@ -57,6 +61,12 @@ export async function createRazorpayOrder(firebaseUid: string, bookingId: string
       receipt: booking.id,
       keyId: env.RAZORPAY_KEY_ID
     };
+  }
+
+  const razorpay = getRazorpay();
+
+  if (!razorpay) {
+    throw new ApiError(503, "Razorpay server configuration is missing");
   }
 
   const order = await razorpay.orders.create({
