@@ -14,6 +14,19 @@ export function isConfiguredAdminUser(firebaseUser: FirebaseUser) {
   return Boolean(normalizedEmail && env.ADMIN_EMAILS.includes(normalizedEmail));
 }
 
+function userLookup(firebaseUser: FirebaseUser) {
+  const normalizedEmail = firebaseUser.email?.toLowerCase() ?? null;
+  const normalizedPhone = firebaseUser.phone_number ?? null;
+
+  return {
+    OR: [
+      { firebaseUid: firebaseUser.uid },
+      ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
+      ...(normalizedPhone ? [{ phone: normalizedPhone }] : [])
+    ]
+  };
+}
+
 export async function syncUser(firebaseUser: FirebaseUser) {
   const existingUserCount = await prisma.user.count();
   const normalizedEmail = firebaseUser.email?.toLowerCase() ?? null;
@@ -21,7 +34,7 @@ export async function syncUser(firebaseUser: FirebaseUser) {
   const isConfiguredAdmin = isConfiguredAdminUser(firebaseUser);
   const userData = {
     firebaseUid: firebaseUser.uid,
-    email: firebaseUser.email ?? null,
+    email: normalizedEmail,
     phone: normalizedPhone,
     name: firebaseUser.name ?? null,
     avatarUrl: firebaseUser.picture ?? null,
@@ -29,13 +42,7 @@ export async function syncUser(firebaseUser: FirebaseUser) {
   };
 
   const existingUser = await prisma.user.findFirst({
-    where: {
-      OR: [
-        { firebaseUid: firebaseUser.uid },
-        ...(normalizedEmail ? [{ email: normalizedEmail }] : []),
-        ...(normalizedPhone ? [{ phone: normalizedPhone }] : [])
-      ]
-    }
+    where: userLookup(firebaseUser)
   });
 
   if (existingUser) {
@@ -45,10 +52,20 @@ export async function syncUser(firebaseUser: FirebaseUser) {
     });
   }
 
-  return prisma.user.create({
-    data: {
-      ...userData,
-      role: isConfiguredAdmin || existingUserCount === 0 ? "ADMIN" : "USER"
-    }
-  });
+  try {
+    return await prisma.user.create({
+      data: {
+        ...userData,
+        role: isConfiguredAdmin || existingUserCount === 0 ? "ADMIN" : "USER"
+      }
+    });
+  } catch (error) {
+    const conflictingUser = await prisma.user.findFirst({ where: userLookup(firebaseUser) });
+    if (!conflictingUser) throw error;
+
+    return prisma.user.update({
+      where: { id: conflictingUser.id },
+      data: userData
+    });
+  }
 }
