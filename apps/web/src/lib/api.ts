@@ -56,7 +56,7 @@ async function authHeaders(user?: User | null) {
 export async function apiFetch<T>(path: string, init: ApiInit = {}): Promise<T> {
   const { user, headers, ...rest } = init;
   const method = rest.method?.toUpperCase() ?? "GET";
-  const primaryApiBaseUrl = user ? SAME_ORIGIN_API_BASE_URL : API_BASE_URL;
+  const primaryApiBaseUrl = path === "/auth/sync-user" ? API_FALLBACK_BASE_URL : user ? SAME_ORIGIN_API_BASE_URL : API_BASE_URL;
   const requestHeaders = new Headers(headers);
   if (!requestHeaders.has("Content-Type")) {
     requestHeaders.set("Content-Type", "application/json");
