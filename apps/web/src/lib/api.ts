@@ -16,6 +16,7 @@ const RETRYABLE_STATUSES = new Set([502, 503, 504]);
 const PROXY_AUTH_HEADER_ERROR = "Missing auth token";
 
 function canRetryFallback(path: string, method: string) {
+  if (path === "/auth/sync-user" && method === "POST") return true;
   if (method !== "GET") return false;
   if (path.includes("/admin") || path.includes("/owner") || path.includes("/me")) return false;
   return true;
