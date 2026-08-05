@@ -32,6 +32,22 @@ export async function syncUser(firebaseUser: FirebaseUser) {
   const normalizedEmail = firebaseUser.email?.toLowerCase() ?? null;
   const normalizedPhone = firebaseUser.phone_number ?? null;
   const isConfiguredAdmin = isConfiguredAdminUser(firebaseUser);
+
+  if (isConfiguredAdmin && normalizedEmail) {
+    const adminUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+    if (adminUser) {
+      return prisma.user.update({
+        where: { id: adminUser.id },
+        data: {
+          phone: normalizedPhone,
+          name: firebaseUser.name ?? adminUser.name,
+          avatarUrl: firebaseUser.picture ?? adminUser.avatarUrl,
+          role: "ADMIN"
+        }
+      });
+    }
+  }
+
   const userData = {
     firebaseUid: firebaseUser.uid,
     email: normalizedEmail,
