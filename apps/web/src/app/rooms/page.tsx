@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.apnarooms.com/rooms" }
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function RoomsPage() {
   return <HomePageContent initialCategory="ROOM" listingPage />;
 }

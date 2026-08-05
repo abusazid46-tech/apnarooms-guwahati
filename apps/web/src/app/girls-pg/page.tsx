@@ -7,6 +7,9 @@ export const metadata: Metadata = {
   alternates: { canonical: "https://www.apnarooms.com/girls-pg" }
 };
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export default function GirlsPgPage() {
   return <HomePageContent initialCategory="GIRLS_PG" listingPage />;
 }
